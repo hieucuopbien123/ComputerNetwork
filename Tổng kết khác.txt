@@ -1,0 +1,52 @@
+Giáo trình học từ trên xuống, k tính 2 lecture cuối:
+Lịch sử của internet
+Computer network là gì. Cần 2 thứ để tạo ra 1 network architecture. Protocol.
+Data switching network có 2 loại là circuit switching và package switching lại chia làm 2 cái là datagram switching và virtual circuit switching. Connection oriented transmission và connectionless(ez)
+Layer architecture, lợi ích. Mô hình OSI và TCP/IP. Vai trò từng tầng gắn header vào khi truyền qua từng tầng. DNS, ARP cho MAC và IP trên NIC.
+Physical layer. Các loại tín hiệu. Mô hình truyền tin. MediaWired TwistedPair Coaxial OpticalFiber. Media Wireless. Data transmission DTE/DCE. 
+Data encoding 4 loại. D to D: NRZ-L, NRZI, Bipolar AMI, Pseudoternary, Manchester, Differential Manchester.
+MAC functionalities. Error control, Flow control, Media access control. 
+EDC, Parity code thg cho hardware, CRC, phản hồi. MAC, Channel division TDMA FDMA CDMA, Random access PureAloha SlottedAloha CSMA CSMA/CA CSMA/CD, TokenRing TokenBus => chú ý tất cả các cái này đều là trans ở tầng data link để truyền tin adjacent node.
+Tại sao cần flow control. Stop and wait và ưu nhược. Sliding window. Piggy Bank.
+LAN standard, Ethernet. Classical Ethernet, Switched Ethernet. Ethernet frame. IP MACAddress ARPTable. 
+Phân biệt Repeater, Hub, Bridge, Switch. Cơ chế của switch. Standard 802.11 LAN. Base station và AP. 
+Mạng truy nhập là gì, 3 loại, kiến trúc => bỏ
+Network layer có 2 vai trò. IP protocol và tính chất. 
+IP address v4. Interface. Classes IP address. CIDR Network mask. Special IP address: private, loopback, multicast, network, host, broadcast, self assigned IP. IPv6. IP header. Package fragmentation. ICMP message. Ping cơ chế RTT. Traceroute cơ chế TTL, RTT. 
+Routing và router và routing table. Longest matching rule và default route. Route aggregation.
+Static routing và dynamic routing.
+Transport layer, principle. Mux/Demux. UDP. Error control bth, Error control k có NAK. Channel handle error and package lost. TCP, 3 step connection và chi tiết.
+
+
+Tổng kết bài tập chưa tính 2 lecture cuối:
+Convert digital signal <-> bitstream và tính tần sô của digital nếu cho tần số của signal.
+Tìm R biết D và G check CRC
+Tính thời gian và hiệu suất các thứ của SlidingWindow và StopAndWait
+Xác định class của các IP address, tìm netid và hostid của từng ip đó
+Tính network address từ IP và network size
+Phân loại host address, network address, boardcast address.
+Divide IP thành nhiều subnet thỏa mãn điều kiện tương ứng, tìm số host, network address, mask của từng network. Divide IP thành N subnet ngầm hiểu mỗi subnet là max
+Xác định đích đến của package khi biết entries IP address của routing table.
+Xác định routing table của các router trong hình để thỏa mãn điều kiện nào đó.
+Xác định Seq, ACK khi 2 host trao đổi dữ liệu cho nhau.
+
+
+Tổng kết các protocol: 
+TCP: giao thức truyền tin, tại transport layer, dùng truyền tin an toàn giữa 2 máy, có check error và yêu cầu gửi lại, đảm bảo gói tin luôn đến đầy đủ và đúng thứ tự
+UDP: giao thức truyền tin, tại transport layer, dùng truyền tin k an toàn giữa 2 máy, truyền tin liên tục mà k cần biết bên kia có nhận được hay không, k có cơ chế gửi lại lỗi để yêu cầu gửi lại gói tin mà chấp nhận mất gói tin
+IP: là 1 protocol kiểu giúp truyền tin tới đích trong tầng mạng, 1 gói tin khi cần gửi tới mạng khác cần dùng tới IP protocol, nó đính kèm 1 IP header có các trường đủ để xác định đích đến, checksum và đủ các trường phục vụ cho vc đó, package cần gửi được chia nhỏ và take different route
+MPLS là 1 giao thức giống kiểu IP nhưng package luôn gửi fixed route nên ít dùng.
+Ethernet: tầng datalink, procotol giúp connect các thiết bị với các host khác như router để từ đó connect ra bên ngoài, dùng wired link connect trong mạng LAN, có nhiều mô hình như star, bus,..
+HTTP: giao thức mạng, tầng application, dùng để giao tiếp giữa client server, vẫn dùng TCP để transport
+FTP: giao thức truyền file, tầng application, dùng tương tác giữa các ứng dụng, vẫn dùng TCP để transport
+SMTP: giao thức truyền mail, tâng application, vẫn dùng TCP để transport
+Telnet: remote terminal access, tầng app vẫn dùng TCP để transport
+Streaming multimedia: dùng cho mục đích riêng kiểu real time trong application, dùng TCP or UDP để transport đều OK.
+Media access control(MAC): là protocol hỗ trợ khi các ứng dụng dùng chung 1 dây vật lý, tầng data link, nó giúp avoid collision khi các node send data.
+Address Resolution Protocol: là protocol giúp lấy MAC address từ IP address, k rõ nó ở tầng nào vì MAC address dùng ở datalink, IP address dùng ở network layer. 
+Multiple access control(cũng là MAC hay CSMA) protocol: là cơ chế tránh collision khi các host giao tiếp với nhau trong LAN
+ICMP: giao thức check lỗi ở tầng mạng, được encapsulated trong IP protocol luôn.
+OSPF: routing protocol thuộc loại link-state, ở tầng network, xây graph và thực hiện thuật toán trên node đó để tìm min route tới mọi node khác
+RIP: routing protocol thuộc loại distance vector, xây temp graph và exchange table để tìm better routes
+CSMA: datalinklayer tránh collision medium
+

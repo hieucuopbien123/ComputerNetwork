@@ -1,0 +1,104 @@
+Network layer:
+Vai trò là xây path(routing alg) và truyền data theo path(internet protocol) -> dùng Router có routing table làm intermediate node.
+
+
+# IP address:
+Có v4 32bits và v6 128bits
+
+-> Classful IP address: 5 class
+If the class is class A, the first byte is the netid and the remaining 3 bytes are the hostid. If the class is class B, the first 2 bytes are the netid and the remaining 2 bytes are the hostid. For a class C address, the first 3 bytes are the netid and the last byte is the hostid.
+
+Khi byte đầu có giá trị nằm trong khoảng
+A: 0 -> 127
+B: 128 -> 191
+C: 191 -> 223
+VD:  Class C có 256 host, nếu dùng 300 host thì cần chuyển sang class B, tùy biến.
+VD: 10.10.10.9 thuộc class A; 192.168.70.5 thuộc class C.
+
+-> CIDR: 
+Khi 1 IP mà k thấy có mask tức là loại IP đó là classful IP address. CIDR là 1 PP khắc phục nhược điểm của classful IP address về vc chia các address space.
+
+Router có vai trò routing forward package to subnetwork nào. Interface nối với từng port của router coi là 1 host riêng và mọi host trong subnet đó đều cùng network address chứ kp cái interface phải toàn 0 hay toàn 1 gì cả nhé. 
+Administrator của network chịu trách nhiệm assign ip address có subnet mask cho các host bên trong or thích chia ra nhiều subnet thoải mái tùy dùng subnetmask. Cứ tăng cái subnetmask lên 1 là 1 lần chia đôi lượng IP ra làm 2 subnet khác nhau và cái bit cuối của subnetmask là 0 và là 1 là 2TH chia đôi. Tương tự dùng 2 bit của host address để chia 4 subnet. 
+
+Bản chất: Khi 1 máy giao tiếp với 1 máy khác trong cùng network, nó dùng private address, khi giao tiếp với 1 máy khác ngoài network, nó gửi package tới router thì router sẽ dùng 1 mechanism gọi là network address translation để translate address thành public address và thực hiện tiếp forward như bth. Router sẽ có 1 set of public address, mỗi khi có host muốn giao tiếp với bên ngoài, nó sẽ take 1 public address từ set để assign cho host đó và thực hiện forward communation. Nên 1 máy khi connect ra bên ngoài, IP address của nó có thể đổi. Nó có thể repace address với public address bằng RoundRobin.
+Còn có Port Address Translation(PAT) là mở rộng của Network Address Translation(NAT). Thay vì router có 1 set các pubaddress, nó chỉ có 1 single pubaddress. Mọi host muốn communicate outside sẽ dùng chung 1 public ip address. Để phân biệt các host khác nhau thì nó assign port khác nhau cho các host khác nhau và associate cái address kia với các port. 
+
+--> Tính host id và net id dựa vào network mask, tính network size
+Có n bit thì 2^(n) bằng số lượng các tổ hợp có thể tạo ra từ n bit đó, 2^(n) - 1 là giá trị lớn nhất decimal tạo được từ n bits => ăn trap đấy, dùng tổ hợp bth tự suy luận sẽ kbh sai.
+Trap: VD có 5 bit cho host thì max dùng được 30 host trong mạng chứ kp 29, vì 5 bit tức ta dùng được 32 host từ 0 -> 31 nhưng 0 toàn bit 0 và 31 toàn bit 1 ta k được dùng nên chỉ còn 30 host.
+
+Netmask thực tế họ biểu diễn như IP cơ. VD: 255.255.240.0 là 11111111.11111111.11110000.00000000 tức số bit 1 từ trái qua là số netmask ở đây là 20 và họ lấy AND với IP address để ra network address.
+VD: Sử dụng mặt nạ 255.255.252.0 để chia mạng 160.12.64.0/19 thành các mạng con thì số mạng con thành lập là? => Tức là chia mạng con từ 160.12.64.0/19 thì các mạng con phải thỏa mãn nằm trong 160.12.64.0/19, cỏn mặt nạ 255.255.252.0 có nghĩa là mọi mạng con đều sử dụng network mask là 11111111 11111111 11111100 00000000 => tức là mạng con có 19 bit đầu cố định, xong 22 bit đầu lại là network mask, số lượng mạng con(subnet) chỉ có thể dùng 3 bit tức có 2^3 = 8 mạng con
+
+Người ta thg dùng default route 0.0.0.0/0 để connect ra internet. 
+
+--> Phân biệt address:
+NetID gọi đầy đủ là network address. Khi yêu cầu tính network address là cần tính ra giá trị 4 bytes khi host address tất cả bit đều là 0, address này được reserved for host. Ngược lại host address chính là IP address bình thường đầy đủ. Trong đó còn có broadcast address là address mà mọi host id đều là 1, address này dùng để gửi data tới mọi host trong mạng.
+=> Tức 2 address mà hostId toàn 0 với 1 đã được đặt trước, k thể assign cho 1 node nào 2 address đó cả => bẫy khi chia IP thành subnet.
+Thực tế họ sẽ cố gắng divide số lượng IP ra nhiều nhất có thể miễn bao đủ lượng host. 1 host tràn ra ngoài 2^n cũng phải dùng thêm 1 bit nx để biểu diễn subnet đó.
+VD: 
+203.178.142.128 /25 => network address vì 128 là 10000000
+203.178.142.128 /24 => host address
+203.178.142.127 /25 => broadcast
+203.178.142.127 /24 => host address vì 127 là 01111111
+
+Piv address chỉ dùng trong local network và là unique trong local, ở ngoài có thể trùng. Các address đb giúp xử lý vấn đề thiếu address vì lượng address là k đủ nếu cái gì cũng unique nên trong phạm vi local mới sinh ra nhiều address đặc biệt. Outside communication phải dùng public address(là address bth ta biết) và là duy nhất.
+Loopback address là address mà khi ta gửi tới thì sẽ tự gửi tới chính máy ta, dùng cho development. VD khi mang máy đến computer room thì từng máy sẽ được assigned 1 private address. Địa chỉ IP nội tại tự gửi tự nhận để kiểm thử phần mềm, mô phỏng hoạt động của mạng
+Multicast address là address assigned cho group of host. Khi cần biểu diễn group of host phải dùng nó. 
+Khi update routing table thì chỉ cần update các router liên quan. Chính vì v 1 cụm address chỉ tương tác ra bên ngoài qua 1 cục lớn nên update bị giới hạn nhỏ dần. Tức 1 router k kết nối với tất cả các ip khác nên kp bất cứ node nào đổi thì tất cả đều phải update mà chỉ đổi trong phạm vi nhỏ của area đó thôi.
+Còn có self assigned IP address.
+
+
+
+# IP package
+-> IP header: 
+IP protocol thực chất giống UDP và k đáng tin, tuy nhiên có thể dùng các upper layer như TCP cho nó để khiến nó reliable được. IP header có upper layer protocol xác định các transport protocol như TCP, UDP hoặc các protocol được đóng gói trong IP package như ICMP, IGMP, OSPF
+TTL của packet sinh ra để tránh bad routing khi 2 router A và B cứ forward mãi loop cho nhau. 
+Trường header checksum là error detection code chỉ check error for only header thôi, qua mỗi router nó đều check.
+Layer 2 có MTU thì package chỉ cho size MTU max được truyền qua, lớn hơn sẽ break thành nhiều gói. Mỗi gói mang có 1 IP header riêng và có 1 ID riêng. ID đó nằm trong trường identifier 16bit của header.
+Còn có version, header length, DS(Type of Service), length, ID of fragmented packet, source IP, des IP.
+
+-> Packet fragmentation: 
+Packet size lớn hơn MTU thì chia ra gửi r hợp lại ở cuối.
+Trường offset định vị trí là gía trị position bắt đầu của fragment trong package lớn /8 vì nó lấy 8bytes là 1 đơn vị.
+
+
+
+# ICMP
+ICMP thì A forward qua nhiều router và khi bị lỗi thì nó lại forward message lỗi lần lượt qua chiều ngược lại các router về nguồn.
+IP k đáng tin nên cần ICMP giúp exchange error info giữa S và R. ICMP là protocol above IP. Nó gắn vào IP header 1 ICMP message gồm type, code và checksum, data và các phần khác của header. Có nhiều loại type error ICMP khác nhau. ICMP vô hình với user và có thể dùng debugging tool như ping, traceroute để dùng ICMP. Ping là 1 phần mềm để test connection dùng gửi ICMP request và nhận ICMP reply, trường data chứa timestamp để tính RTT. Traceroute khác ở chỗ nó gửi package với TTL tăng dần, mỗi khi TTL giảm về 0 thì router destroy package đó và send back Sender ICMP packet chứa IP của router, từ đó biêt được TTL của đích đến và tính được RTT luôn. Trace router khi đã gọi chỉ dừng lại khi ICMP echo rằng đã tới đích or nhận được ICMP message 'host unreachable'
+Traceroute mạnh hơn ping ở chỗ nó có thể in ra list of router bw 2 host.
+
+VD: Comp A gửi message tới B thông qua 1 router, nếu router k tìm thấy đích đến trong routing table mà cái IP header trong message có dùng ICMP protocol định nghĩa trong trường upper layer thì router có thể dùng ICMP package với code lỗi là "Destination Unreachable" là 3 và gửi lại máy A. 
+
+-> Ping: test connection gửi đi và nhận response về, chứa timestamp để tính RTT
+-> Traceroute: gửi nhiều package TTL tăng dần, biết được có bnh node ở giữa
+
+
+
+# Routing
+Routing table được build bởi routing protocol khi compute path cho router đó. Dạng bài về routing table cứ chuyển hết byte cuối sang binary rồi chơi. 
+Thực tế host cũng có routing table xem bằng "netstat -rn"
+Trong cùng mạng thì gửi TT, khác mạng thì phải gửi qua interface của 1 router khác định nghĩa trong routing table.
+
+Routing table có 2 cột là network và next-hop và nó chỉ cho biết cần forward bước sát tiếp theo là gì chứ k cho biết các thiết bị k connect trực tiếp với nó.
+Thực tế routing table có nhiều trường hơn như metric, netmask, interface,... trong cmd nhưng chỉ cần quan tâm chính 2 cái trên.
+Metrics là 1 chỉ số đo độ ưu tiên. Path có metrics nhỏ sẽ có priority nhỏ hơn. 
+
+-> Phân biệt: network interface, host, subnetwork, router. 
+Router là 1 thiết bị trung gian trong mạng. Thực tế mỗi cục router có 1 port là 1 IP address riêng để nối vào subnet khác nhau, ta coi nó là interface mà truyền vào đó là truyền vào 1 subnet nào.
+Interface là từng port của router. Nó khá giống IP address.
+Subnetwork(subnet) là tập hợp nhiều host có interface cùng prefix. VD 1 nhánh của router.
+=> Họ cho rằng IP address gắn với đúng ra là interface chứ kp là host hay router, tức interface nó như 1 lớp chứa 1 IP address của từng thiết bị v. 1 router có nhiều interface và 1 host có thể có nhiều interface. 
+
+-> Longest matching rule:
+Subnet ip có thể bao gồm nhau Vd 11.0.0.0/8 bao 11.1.0.0/16 bao 11.1.2.0.24 => tức 1 address có thể thuộc vào cả 3 cái này và dùng longest matching rule để xđ thuộc cái nào.
+
+-> Route aggregation:
+Route aggregation là vc chia thành nhiều router sẽ giảm kích thước của routing table lưu trong memory của từng router
+
+-> Update routing table:
+--> Static routing
+--> Dynamic routing
+

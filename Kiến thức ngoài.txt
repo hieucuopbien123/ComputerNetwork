@@ -1,0 +1,34 @@
+-> Internet xuất phát từ 1 dự án thử nghiệm của ARPA ban đầu chỉ có 2 nodes mở rộng dần ra.
+
+VNNIC là quản lý tên miền ở VN, cung số liệu và liên kết với internet quốc tế. Nó quản lý, phân chia các subdomain VD hust.edu.vn được chia ra từ edu.vn. Quốc tế thì có ICANN, họ quản lý các node root trong cây tên miền
+VNIX: hệ thống chuyển đổi giữa các nhà mạng. Các ISP liên kết với nhau thông qua các hệ thống VNIX ở các thành phố và từ đó liên kết ra các nước khác. Để connect với global internet, dùng optical fiber nối nhiều nơi dưới đại dương.
+
+
+-> Mạng máy tính là các thiết bị connect theo 1 cấu trúc để trao đổi data. Mạng máy tính tóm lại chỉ cần giải quyết 3 vấn đề: 
+1) Cấu trúc là gì: Đó là các topology kết nối hình như nào, cấu trúc ảnh hưởng đến vc truyền data VD truyền trực tiếp hay truyền tất cả về server. Phức tạp hơn để quản lý các vùng miền nhỏ ta còn phải phân chia cấu trúc cho private network hay chia ra quản lý từng zone như DNS server.
+2) Làm sao tìm được nhau trong mạng để connect: Nó khác với các thuật toán graph ta từng học toàn duyệt trâu, ở đây nó cần tìm với tốc độ cực nhanh với giả dụ có đến 8 tỷ node mạng thì tốc độ tìm vẫn chỉ qua vài chục node là xong. Để làm được điều đó, nó phân chia vùng theo cơ chế địa chỉ IP, subnet các thứ và tạo ra các layer đính từng thông tin để tìm.
+3) Trao đổi data như thế nào: rất dễ chỉ cần truyền nhận tin, thực hiện actions và gửi trả kết quả. Nhưng vấn đề phức tạp dần khi phải xử lý lỗi đường truyền, tắc nghẽn đường truyền nên phải quản lý tốc độ truyền tải, các ứng dụng khác nhau có protocol xử lý khác nhau,...
+
+
+-> Routing alg:
+Người ta dùng graph để biểu diễn network, có weight ở các edge. Mỗi node có 1 Shortest path tree(SPT).
+Có 2 classes of routing alg là link-state(lấy info tạo graph, run alg, build route table cho node) và distance vector(mỗi node build 1 temporary routing table và exchange để có better route). 
+
+Link state VD dùng Dijikstra, Distance vector dùng Bellman-Ford. Link state thì complexity là O(n^2), O(nE) message được exchange với n node và E links, khi 1 router bị lỗi thì mỗi node có 1 routing table riêng và router đó sẽ gửi giá trị sai, dùng OSPF routing protocol. 
+Distance vector thì complexity k cố định, khi có lỗi sẽ gửi distance vector sai và mỗi node tính distance vector của riêng nó dựa vào thông tin nó nhận được từ các node lân cận làm error lan ra cả network, dùng RIP routing protocol.
+
+
+-> Bài cuối của congestion control:
+S/R là thời gian gửi xong 1 gói tin, thời gian này là kc nhỏ nhỏ giữa 2 lần gửi data ở cột bên trái
+Cho k là số cycle thì k start từ 0. Ở cycle k thì cwnd = 2^k
+Ở cycle k thì Sender đã gửi 1 + 2^1 + 2^2 + 2^3 +... + 2^k = 2^(k+1)-1 tới đích
+Ta có N = O/S tức số lượng package hay window cần gửi = 2^(k+1)-1 thế tìm k ~ 7
+T = k*RTT là thời gian gửi hết file. Ở đây chỉ đúng khi transmit luôn phải waiting
+Chú ý pb O/S là số lượng window và S/R là thời gian transmit 1 window. Ở Th này ta k dùng R vì ta k đụng đến thời gian transmit các window => 2 cách tính. Cái R thg sẽ phải dùng khi cần tìm minimum transmitting time.
+K: số lượng cycle 
+VD ở đây O/S là 200 là số lượng window cần gửi đi thì
+2^(k+1)-1 > 200 => K >= 7 tức k=7 là số lượng cycle tối thiểu cần => time transmit 
+Sau khi transmit xong thì window size sẽ là 2^7(ssthreshold = infinity)
+
+Bài làm đề 20202: 
+Câu 3: cái size L of each package đó là size 1 frame à => Yes

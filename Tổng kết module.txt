@@ -1,0 +1,335 @@
+Computer Network:
+
+
+# Basic
+-> Mạng máy tính là các thiết bị connect theo 1 cấu trúc để trao đổi data
+--> Topology: cấu trúc là gì
+--> Protocol: là cách 2 node connect và gửi nhận tin
+
+-> Transmission model
+--> Circuit switching: connect dùng full bandwidth
+
+--> Package switching: chia gói dùng chung
+---> Datagram switching: route khác nhau
+---> Virtual circuit switching: fixed route, đúng thứ tự
+
+--> Connection oriented transmission và connectionless
+
+-> Layering system:
+OSI: 7 layer
+TCP/IP: 5 layer(thực chất là 4 layer)
+
+Service access point
+
+Thứ tự: Application layer truyền đến tầng ứng dụng và xử lý data trong tầng ứng dụng(có thể gán HTTP hay SMTP header tùy ứng dụng dùng gì), Transport layer truyền giữa các ứng dụng(TCP header), Network layer truyền xa(IP header), Datalink layer truyền trong local(Ethernet frame), Physical layer truyền qua dây vật lý.
+=> Cái datalink layer k có nghĩa là chỉ dùng khi ứng dụng đích cùng mạng local với máy source mà gói tin luôn được truyền qua nhiều node, tức cái data link sẽ định nghĩa cách truyền tin giữa máy hiện tại và máy tiếp theo trong cùng mạng. A -> intermediate nodeX -> intermediate nodeY -> B thì data link của A định nghĩa để liên kết nodeX, datalink của nodeX định nghĩa liên kết nodeY,...
+
+Header các tầng trên k đổi nhưng header từ tầng mạng trở đi thay đổi qua từng node trung gian vì nó chỉ có IP header là trỏ tới đích còn các header khác bên dưới toàn là đủ để trỏ tới intermediate node tiếp theo. Khi node đó nhận sẽ gỡ các header trỏ tới node đó và lại gắn vào header trỏ tới node tiếp theo, do đó header tầng cuối đổi lúc thì là Ethernet header, lúc thì là WDM header tùy vào node tiếp theo nó dùng loại gì để liên kết với node này. Khi đến đích thì các header tầng trên mới dần bị loại bỏ hết.
+
+-> Identification:
+Port number: Transport layer
+IP address: Network layer
+MAC(physical) address: Datalink layer. Mac address k có khả năng routing như IP address
+
+
+
+# DNS
+Muốn nslookup vào DNS server phải có mạng. DNS là protocol tầng ứng dụng
+
+-> Domain name:
+Coi là 1 dạng khác của IP address
+
+-> (Address Resolution Protocol)ARP table và RARP table:
+The ARP table is stored in the RAM of the device chứa mapping và TTL.
+
+MAC Address và IP Address đều xác định duy nhất 1 máy nhưng tại sao người ta k chỉ dùng 1 trong 2 mà phải dùng cả 2. Bởi vì MAC Address là cố định xác định NIC do nhà sản xuất đặt ra, nếu ta tạo 1 hệ thống khép kín k tương tác với mạng global internet thì dùng MAC address luôn được vì tầng data link cho phép truyền dữ liệu trực tiếp giữa các máy bằng MAC Address nhanh mà k cần convert từ IP mà thậm chí chả cần IP. Còn IP dùng trong hệ thống cần tương tác với global internet, nó có 1 tầng riêng. Các máy ở cực xa nhau k thể biết MAC address của nhau được nhưng truy xuất được IP address của nhau nên phải dùng cả 2, IP tuân theo 1 chuẩn chung để routing.
+MAC address 48 bit dùng ở datalink còn IP address 32 bit dùng ở network layer
+
+-> Phân chia không gian tên miền:
+Mỗi node chứa nhiều bản ghi mô tả tên miền như zone nào, admin là ai, địa chỉ ánh xạ là gì
+
+DNS có sơ đồ cây, chia nhiều nhánh với các zone. 1 zone sẽ do 1 máy A quản lý, máy A có địa chỉ IP để request đi vào. 
+
+-> DNS server:
+--> Root server: quản lý 1 list TLD nameserver dựa vào extension
+--> TLD nameserver: lưu thông tin về top-level domain như .com .org .net ...
+--> Authoritative nameserver: từng node lưu DNS record cuối cùng chứa các bản ghi có thông tin chi tiết hơn
+
+-> DNS message
+
+-> Cơ chế DNS:
+Resolver là default server khi request được gửi đến đầu tiên từ máy tính cá nhân để từ đó forward đi các DNS server khác, nó gửi đến root đầu tiên r đi tiếp các server khác. Resolver k chứa tên miền. 
+
+--> Tự phân giải: bộ đệm ứng dụng
+--> Dịch vụ phân giải tên miền: client server
+---> Phân giải đệ quy: resolver hỏi root, root tự hỏi TLD, TLD tự hỏi authoritaive nameserver
+---> Phân giải tương tác: resolver hỏi trực tiếp từng DNS server từ root, TLD, authoritative
+
+
+
+# LAN: 
+Có topology dây các kiểu, nhưng cũng có topology k dây WLAN
+
+-> LAN Standard/802.3 Ethernet: 
+Ethernet standard xác định trong 2 tầng datalink và physical. 2 tầng này có các attribute khác nhau tạo ra Ethernet có tính chất khác nhau. Layer 2 tech.
+Thông thường khi A gửi tin cho B thì A kb MAC address of B mà chỉ biết IP of B mà thôi. A phải boardcast ARP package chứa IP của B để truyền qua mạng và B nhận được sẽ trả lại MAC của B cho A lưu vào. A self learning MAC address của B đó.
+
+Mỗi sự thay đổi trong physical layer và datalink layer sẽ tạo ra 1 loại mạng ethernet riêng với loại dây khác nhau, tốc độ truyền khác nhau.
+
+--> Classical Ethernet: 
+Bus topology nên chung dây, MAC dùng CSMA/CD, coaxial cable
+---> Ethernet frame: có CRC, source/des address,..
+
+--> Switched Ethernet: bh toàn dùng
+Star topology central switch Ethernet, k collision k cần media access control tầng datalink
+Điều đặc biệt là tùy loại LAN topology khác nhau mà cần MAC protocol hay không VD star topology thì k share chung medium nên k cần dùng MAC protocol để tránh collision
+
+-> Devices
+Repeater < Hub < Bridge < Switch
+
+--> Hub: forward signal to remaining port, layer1
+--> Repeater: lặp bit từ port này sang port khác
+--> Bridge: Forward data dựa vào MAC address, layer 2
+--> Switch: 
+Forward data dựa vào MAC address, nhiều port hơn bridge. Nó có table of MAC address và self learning mechanism để xây cái table.
+Switch do có nhiều port nên nó hỗ trợ send data giữa các host k collision.
+
+=> Layer 2 là các thiết bị forward dựa vào MAC address hay các thứ. Layer 2 device có các layer 2 protocol.
+
+-> Wireless LAN:
+Standard 802.11 LAN có access point và base station. Access Point là nơi các thiết bị connect vào để giao tiếp với nhau theo các chuẩn định sẵn trong đó, base station là các thiết bị kết nối k dây. Chuẩn này cũng dùng CSMA/CA for multiple access control khi giao tiếp với nhau. 
+
+--> Band được chia thành nhiều channel tách rời nhau, mỗi quốc gia có số lượng channel tùy và station phải connect với 1 access point. Nó thực hiện điều này bằng cách scan từng channel và bắt các beacon frame chứa ID và MAC của AP rồi chọn 1 AP để connect. Có 2 kiểu scan là passive và active: 
+---> Passive scanning: AP tự gửi connection request
+---> Active scanning: chủ động request tìm AP
+
+--> MAC:
+Khi nhiều thiết bị cùng tương tác với 1 thiết bị, cần xử lý collision trên môi trường k dây khá khó.
+---> CSMA/CA: 
+S check nếu channel liên kết với R có available trong khoảng thời gian DIFS time hay không. Rảnh thì gửi. Nếu bận thì chờ đợi 1 khoảng thời gian random gọi là back-off. Sau backoff thì send data, nếu k nhận được ACK của cục vừa send(tức là channel vẫn chưa available) thì nhân đôi backoff và lại chờ và cứ tiếp tục như v. Do wireless truyền tin kp dễ dàng nên khó bắt phải làm như v. Còn phía receiver chỉ cần chờ nhận frame thì gửi lại ACK sau SIFS thôi. 
+
+---> RTS-CTS: 
+Để avoid collision thì R có reserve channel k cho phép random access để k ai được gửi tới nó bừa bãi, rồi S có thể gửi RTS tới R bằng CSMA. Đặc điểm của frame này là rất ngắn nên ít khi xảy ra collision(càng lớn càng dễ collision). R sẽ boardcast trả lại CTS. Mọi station nhận CTS có thể gửi data frame tiếp, các station khác chậm chân sẽ phải cancel và chờ tiếp.
+
+
+
+# Physical Layer
+Analog signal -> digital signal -> bit stream -> packet -> packet transmission
+Source <-> transmitter <-> transmission system <-> receiver <-> destination
+Transmission system có thể là local network, wide-area network, medium, amplifier, repeater,..
+
+-> Media:
+--> Wired:
+---> Twisted Pair: xoắn, dùng phổ biến. Có unshield twisted pair và shield twisted pair.
+---> Coxial Cable: dùng cho TV, telephone transmission
+---> Fiber Optics: dùng cho metropolitan or connect router of ISP, có single mode or multimode
+
+--> Wireless:
+---> Infrared: tia hồng ngoại k xuyên được tường
+---> Radio
+---> Microwave: TV, telephone xa, metropolitan
+
+-> Topology:
+--> Point to point: star
+--> Point to multipoint: bus
+
+-> Transmission methods:
+Simplex, Full duplex, Half duplex
+
+-> Transmission format:
+Sequent trans, parallel trans
+
+-> Medium interface:
+--> DTE và DCE:
+DCE có data hỗ trợ vc truyền tin và k thể truyền. DTE làm nhiệm vụ truyền qua media khi kết nối được với media. Kết hợp 2 cái lại là 1 interface truyền tin. Các thiết bị khi truyền cho nhau sẽ dùng cái interface này
+VD: DCE cung interface chứa các thứ như độ dài 1 pulse, encoding method, level of voltage,.. và DTE gọi vào nó để truyền tới đích.
+
+--> Media interface: số pins, voltage, encoding method,..
+
+-> Data encoding/Digital data - digital data/Line encoding methods:
+Modem là thiết bị chuyển đổi digital - dialog
+
+--> NRZ-L và NRZI: theo signal; gặp 1 là đổi
+Trap: NRZ-L thì 0 là cao, 1 là thấp chứ kp ngược lại
+
+--> Bipolar-AMI và Pseudoternary: gặp 2 cái 1 liên tiếp là đổi, gặp 0 là giữ nguyên; Pseudternary ngược lại
+
+--> Manchester và Differential Manchester: gặp 0 đổi cao thấp, gặp 1 đổi thấp cao; gặp 1 k đổi ở đầu, còn lại đổi hết.
+Trap: bit đầu tiên tìm của manchester phải dựa vào lần k đổi level đầu tiên và truy ngược về để tránh lỗi cái đường vẽ ban đầu bị sai.
+
+--> Đánh giá Clock recovery và DC component:
+Clock recovery là good synchronization nếu đổi signal nhiều lần -1, 0, 1. Mấy cái encode, nó cố tình baurd rate càng cao càng tốt để đồng bộ và clock recovery chuẩn.
+DC component là có khả năng xảy ra TH chỉ 1 đường nằm ngang khiến bên nhận detect nhầm signal level. Thì NRZ nếu chỉ cho 1 loại bit có thể luôn xảy ra nằm ngang, ta cần tránh DC component.
+
+--> Data rate(bit rate), Baud rate
+Phân biệt data rate 100Mbps và tần số 100MHz: Data rate đo tốc độ truyền tải gói tin qua đường truyền kỹ thuật số còn tần số là tốc độ truyền sóng trong 1s và = 1/chu kỳ. Bất cứ khi nào có sóng thì đều có thể dùng khái niệm tần số.
+
+Baud rate là số lần symbol thay đổi trong 1s(tương tự tần số), nó cũng là lượng bandwidth cần thiết dùng cho digital signal
+Baud rate của manchester gấp đôi NRZ. Tần số của NRZ-L là f, tần số của Manchester gấp đôi là 2f.
+
+bit rate của manchester = 1/2 baud rate
+bit rate của NRZ = baud rate = tần số của signal = f
+
+
+
+# Datalink layer
+-> Functionalities:
+--> Framing: đóng frame
+--> Addressing: đóng thêm physical address
+
+--> Media access control: 
+Xử lý conflict data trên dây vật lý nếu dùng chung. Tầng này lại lo cho dây của tầng vật lý vì nó chuyên transfer chung mạng
+=> Xác suất xảy ra đụng độ của phương pháp điều khiển truy nhập đường truyền(tức vật lý) được xếp theo thời gian học: Pure Aloha > Slotted Aloha > CSMA/CA > CSMA/CD > Token passing
+
+---> Chanel division:
+----> TDMA: time
+----> FDMA: frequency
+----> CDMA: mix encrypted signal
+
+---> Random access:
+Mọi channel có thể dùng toàn bộ nhưng load lớn dễ va chạm
+----> Pure Aloha: cứ send, có stations conflict thì gửi lại
+----> Slotted Aloha: cứ send vào begin của các ktg bằng nhau, giảm conflict
+----> CSMA: check channel rảnh thì gửi
+CSMA/CA: check rảnh và mỗi station chờ random period mới gửi
+CSMA/CD: check rảnh thì gửi thì chờ random waiting time r lại gửi với xs p
+
+---> Sequent access
+----> Token ring: truyền token lần lượt cho access. Token bus cũng chỉ là đổi hình dạng từ ring sang bus thôi
+
+--> Flow control: quản lý tốc độ tránh tắc
+---> Stop and wait: sau mỗi lần gửi frame đều chờ ACK 
+StopAndWait thích hợp với size lớn, k hợp với size nhỏ vì dù size nào nó cũng phải chờ delay phần RTT time nhận về ACK mới đc gửi tiếp nên 1 lần gửi big size sẽ lợi hơn. Nhưng nếu big size thì buffer của Receiver có thể k đáp ứng được và cứ 1 lần gửi big size thì dễ error mà cứ error là gửi lại big size cũng tốn. Ở đây ta đang nói chức năng của datalink layer thao tác với các node adjacent mà trong các hệ thống shared medium tức nhiều máy dùng chung 1 thiết bị dây chẳng hạn mà 1 lần gửi big size tức 1 máy chiếm cái dây đó quá lâu sẽ k tốt.
+
+---> Sliding window: 
+Frame được đánh số. Sender gửi nh frame, receiver gửi ACK chứa frame number muốn lấy tiếp theo.
+
+Piggy backing: nếu receiver gửi data lại sender(full duplex) và cũng cần gửi ACK -> đính kèm ACK và data frame
+
+RTT = 2*(propagation delay)
+1Mbps = 10^6bit/s
+Trap: Khi tính với sliding window, lúc nào cx phải check xem nó rơi vào TH nào bằng cách ss RTT+Time trans 1 frame với thời gian send hết W frame.
+Tính toán thì chơi cả phần lẻ, VD tính thời gian tổng gửi đi hết mà lượng sliding window là phần lẻ thì lấy luôn số lượng frame là số float thoải mái.
+=> Tính với RTT, time transer 1 frame, fastest transmission time.
+
+--> Error control: Tìm và fix error
+---> EDC: f(data) = EDC
+---> Parity code: thêm 1 bit vào cuối detect số bit 1 chẵn hay lẻ
+
+---> CRC: phép chia lấy XOR. Cho D, G length r+1 -> tìm R để <D,R> chia hết cho G
+Điểm hay là XOR có thể dùng Associative bth dễ hiểu. XOR có thể dùng biểu diễn số dư cho phép chia logic.
+
+---> Reaction: Stop and wait, Go back, Selective Reject
+
+-> LAN
+
+
+
+# Network layer:
+
+
+
+# Transport layer
+Network layer chỉ quan tâm đến data bw host truyền qua global internet còn transport layer mới chỉ định vào ứng dụng nào
+Transport layer được assigned for each app running on a port. Nên nhớ 1 app chỉ được chạy ở 1 port và nó như id của app đó. Mỗi ứng dụng khi communicate outside đều dùng 1 transport port là socket(1 loại address) là combination of IP address và port gắn với ứng dụng đó. Khi send message vào address này sẽ tự gửi cho ứng dụng ở máy kia.  
+VD: Network A có ứng dụng zalo chạy ở port 1 gửi tin tới ứng dụng zalo ở port 4 của network B thì gói tin được gửi đi có source port là 1, destination port là 4. 
+Số lượng port tức là có thể có hơn 60000 ứng dụng chạy same time trên 1 máy.
+2 ứng dụng zalo muốn tương tác thì k thể truyền qua web bth mà phải vào mạng zalo, transport layer giúp xác định end app, đâu là nơi đầu cuối cần tương tác.
+
+Package ở tầng transport nó đóng gói gọi là segment, ở tầng application gọi là message, ở 4 tầng nó đều có tên gọi khác nhau. 
+
+-> MUX/DEMUX:
+Ứng dụng web máy A -> transport layer của A -> multiplex data -> gửi qua các node trung gian. Lưu ý các node trung gian chỉ dùng 3 tầng dưới chứ k dùng transport layer -> gửi máy B -> transport layer máy B demultiplex -> ứng dụng web máy B.
+
+-> UDP: connectionless, k kiểm soát lỗi và tắc nghẽn
+Khi dùng UDP, nó k có cơ chế check lỗi mà ứng dụng nào dùng nó phải tự implement cơ chế control error. 
+UDP có EDC check lỗi của whole data, nó từ chối nhận package khi xảy ra lỗi nhưng vấn đề là nó k inform để bảo sender gửi lại package bị lỗi. 
+
+Why does UDP exist? Would it not have been enough to just let user processes send raw IP packets?
+=> By using UDP, a segment will be delivered correctly to the specified application because UDP uses source and destination ports while raw IP packet does not include ports. That is, a segment cannot be delivered to a specified application as a raw IP packet.
+
+-> TCP: connection-oriented
+Cơ chế connection tạo reliable service: thiết lập connection, close connection, transfer data.
+
+Vd truyền tin TCP:
+A data stream: [41 bytes]|['Hello'][...]
+B data stream: [78 bytes]|['World'][...]
+SEQ là first byte được gửi trong stream này, ACK là first byte muốn nhận ở đợt sau.
+=> A ---SEQ=42,ACK=79---> B
+=> A <---SEQ=79,ACK=47--- B
+=> A ---SEQ=47,ACK=84---> B
+=> gửi và nhận 1 cục string
+
+TCP dùng sliding window để control flow
+
+--> TCP segment:
+Receive window là lượng free buffer size ở receiver size, là lượng data mà receiver có thể nhận ở thời điểm hiện tại. 
+Checksum là error detection code.
+TCP/UDP segment format của transport layer có cả trường source port và destination port riêng chỉ định 2 ứng dụng Sender và Receiver.
+
+-> Error control:
+--> NAK/ACK, đánh số, timeout
+Error control có thể dùng NAK or k dùng NAK. Nếu k dùng NAK nó chỉ cần đánh số vào package và dùng ACK4 chẳng hạn để quy ước "package 3 nhận thành công, request for package 4", khi nhận package 4 thất bại nó lại gửi lại ACK4 để request lại package 4 là được.
+
+--> Error control gửi đi gửi lại cũng có thể dùng StopAndWait hoặc pipeline(pipeline nó giống sliding window trong data link layer).
+
+-> Flow control: kiểm soát lượng data send, Rwnd, Cwnd. Slide quá perfect theo trình tự thời gian
+
+-> Congestion control: Slide quá perfect theo trình tự thời gian.
+Congestion control cũng là thứ mà system phải xử lý để đảm bảo tính đáng tin cậy của protocol TCP. Data flow chỉ quyết định dùng stop and wait hay sliding window để bên receiver k bị overload.
+Khi truyền tin qua mạng sẽ đi qua hàng đông intermediate node là router thì các intermediate node có thể bị overload khi quá nhiều cặp sender-receiver hoạt động thì buffer của nó bị full và k nhận thêm nx khiến các package bị lost => khi đó phải dùng congestion control vì nó chi tiết các gửi gói tin đi như thế nào để tránh tăc.
+Cơ chế là nếu ta tìm được node nào bị overload thì ta có thể bảo source giảm speed lại để tránh overload nhưng transport layer k cho phép làm vc nó mà chỉ cho biết source và des thôi. Ta có thể dựa vào ACK để biết khi nào gói tin chưa được gửi đén được đích. Cơ chế hiển nhiên của TCP đã là v tức khi k gửi tới đích thì đích sẽ tiếp tục send ACK để yêu cầu gửi gói tin gì. Đã tắc xong source lại gửi lại tắc tiếp.
+
+2 quá trình Slow start and congestion avoidance. Nếu congestion avoidance tăng dần đến khi bị tắc thật sự(detect bằng packets lost) thì quay lại từ đầu slow start(timeout) or đầu congestion avoidance(tắc k tới đích, nhận 3 ACK trùng), đều giảm ssthresh đi 1 nửa.
+
+cwnd là congestion window là lượng data có thể send tới đích mà k chờ ACK trong congestion control
+rwnd là congestion window là max data size mà đích có thể nhận
+=> Lượng data có thể send tới đích mà k chờ ACK là min(cwnd, rwnd)
+Khởi tạo cwnd là 1 lần MSS và tăng dần khi nhận được ACK từ receiver -> tăng chậm nhưng lại theo cấp số mũ
+
+
+
+# Application layer
+Application nói chung cho mọi người hiểu là v nhưng bản chất nó cũng chỉ là 1 process chạy trên 1 máy. 2 máy chạy cùng 1 app nhưng thực ra 2 process là hoàn toàn khác nhau. Application protocol định nghĩa cách các process giao tiếp với nhau.
+Vd tương tác giữa client và server: client gửi data tới server, server nhận được và check nếu data login thì gửi OK, nếu là chatmessage sẽ forward tới client đích(mô hình client server chứ kp P2P truyền trực tiếp) => Để server check được loại data và gửi như v thì phải nhờ đến tầng App vì kể từ tầng transport trở xuống chỉ cho biết gửi tới IP đích là gì thôi, cụ thể ứng dụng thì phải là tầng App. Nó xác định sử dụng giao thức gì. Mỗi ứng dụng có 1 app layer riêng.
+
+-> Socket:
+Xác định bởi IP address, port và transport protocol nằm giữa App và Transport layer. Nhờ socket mà ứng dụng biết cần dùng transport service với parameter là gì.
+
+-> Architecture: client/server, P2P, hybrid(vừa client server, vừa P2P)
+
+-> HTTP:
+Open TCP socket mặc định cổng 80, thiết lập TCP connection, server chấp nhận, trao đổi HTTP message, close connection
+HTTP request and response, status code
+
+--> HTTP/1.0 sẽ tạo ra 1 connect mới cho mỗi request. VD ta gửi file index.html bên trong request thêm 10 bức ảnh. Nó tạo connection và gửi và close và cứ lặp lại liên tục 11 lần. H cũng ít dùng.
+--> HTTP/1.1 chỉ 1 connection làm hết, có thể dùng pipeline luôn khi request 10 image như trên
+
+--> Web cache, local cache: lưu data web vào buffer, mỗi request cache hit, cache miss, 
+
+-> Email
+MUA(Mail user agent), MTA(Mail transfer agent)
+
+VD: linhtd@soict.hust.edu.vn thì domain name là soict.hust.edu.vn -> mỗi domain name có 1 mail server riêng. 
+Quy trình: Alice dùng email BK gửi đi hàng loạt thư thì tới mail server của BK -> server này lọc ra các mail là gmail chẳng hạn và gửi sang mail server của gmail -> gmail server sẽ phân phối mail tới mail box của người nhận tương ứng(mỗi người có 1 mail box riêng trên server) -> Khi Bob đọc thư sẽ query từ mail box của mail server của mình. 
+Tính chất là người nào gửi thư hay đọc thư thì chỉ liên lạc với mail server của domain name đó. VD đó là 2 domain name khác nhau chứ gửi cùng mail server thì k cần forward sang mail server khác nhau. Cơ chế như mấy cái mạng với router ấy.
+
+--> SMTP
+Application protocol có thể là SMTP, Telnet, HTTP,... Còn transport protocol có TCP và UDP. VD ứng dụng email có app protocol là SMTP nhưng vẫn dùng transport protocol là TCP để chuyển qua mạng
+
+Giao thức truyền mail và từ máy client đến server và giữa các server với nhau là SMTP. Còn đọc mail có 2 giao thức:
+POP thì sau khi đọc mail sẽ xóa ở server và lưu ở thiết bị người dùng(giảm tải dung lượng server), tức đổi máy sẽ k thấy mail nữa
+IMAP thì đọc mail xong sẽ k xóa ở server, server xử lý mọi thứ
+=> Đó là bản chất gửi mail truyền thống, còn web mail hiện giờ nó chỉ là cài thêm trên app phía người dùng 1 lớp giao thức HTTP nữa r cũng dùng SMTP mà thôi.
+SMTP k an toàn về mặc định vì k yêu cầu login và tin ko được mã hóa nên k ai kiểm tra được, dễ mạo danh.
+
+--> Form thư gửi(header và body), MIME(khi cần chuyển đa phương tiện)
+
+--> FTP
+
+
+
+# Other:
+BER(Bit Error Rate = số bit lỗi / tổng số bit truyền) phản ánh đặc trưng về độ tin cậy của đường truyền.
+
+Ngoài ra còn có Border Gateway Protocol (BGP) là giao thức định tuyến là gateway protocol cho phép tìm đường đi gói tin giữa các vùng tự trị (autonomous systems - AS)
