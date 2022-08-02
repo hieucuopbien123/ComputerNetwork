@@ -36,17 +36,52 @@ TCP: giao thức truyền tin, tại transport layer, dùng truyền tin an toà
 UDP: giao thức truyền tin, tại transport layer, dùng truyền tin k an toàn giữa 2 máy, truyền tin liên tục mà k cần biết bên kia có nhận được hay không, k có cơ chế gửi lại lỗi để yêu cầu gửi lại gói tin mà chấp nhận mất gói tin
 IP: là 1 protocol kiểu giúp truyền tin tới đích trong tầng mạng, 1 gói tin khi cần gửi tới mạng khác cần dùng tới IP protocol, nó đính kèm 1 IP header có các trường đủ để xác định đích đến, checksum và đủ các trường phục vụ cho vc đó, package cần gửi được chia nhỏ và take different route
 MPLS là 1 giao thức giống kiểu IP nhưng package luôn gửi fixed route nên ít dùng.
-Ethernet: tầng datalink, procotol giúp connect các thiết bị với các host khác như router để từ đó connect ra bên ngoài, dùng wired link connect trong mạng LAN, có nhiều mô hình như star, bus,..
+Ethernet: tầng datalink, procotol giúp connect các thiết bị với các host khác như router trong local để từ đó connect ra bên ngoài, dùng wired link connect trong mạng LAN, có nhiều mô hình như star, bus,..
 HTTP: giao thức mạng, tầng application, dùng để giao tiếp giữa client server, vẫn dùng TCP để transport
 FTP: giao thức truyền file, tầng application, dùng tương tác giữa các ứng dụng, vẫn dùng TCP để transport
 SMTP: giao thức truyền mail, tâng application, vẫn dùng TCP để transport
 Telnet: remote terminal access, tầng app vẫn dùng TCP để transport
 Streaming multimedia: dùng cho mục đích riêng kiểu real time trong application, dùng TCP or UDP để transport đều OK.
 Media access control(MAC): là protocol hỗ trợ khi các ứng dụng dùng chung 1 dây vật lý, tầng data link, nó giúp avoid collision khi các node send data.
-Address Resolution Protocol: là protocol giúp lấy MAC address từ IP address, k rõ nó ở tầng nào vì MAC address dùng ở datalink, IP address dùng ở network layer. 
-Multiple access control(cũng là MAC hay CSMA) protocol: là cơ chế tránh collision khi các host giao tiếp với nhau trong LAN
+Address Resolution Protocol: là protocol giúp lấy MAC address từ IP address, k rõ nó ở tầng nào vì MAC address dùng ở datalink, IP address dùng ở network layer. Khả năng là tầng datalink để self learning cái MAC từ IP
+Multiple access control(cũng là MAC hay CSMA) protocol: là cơ chế tránh collision khi các host giao tiếp với nhau trong LAN k dây như RTS-CTS, CSMA
 ICMP: giao thức check lỗi ở tầng mạng, được encapsulated trong IP protocol luôn.
 OSPF: routing protocol thuộc loại link-state, ở tầng network, xây graph và thực hiện thuật toán trên node đó để tìm min route tới mọi node khác
 RIP: routing protocol thuộc loại distance vector, xây temp graph và exchange table để tìm better routes
 CSMA: datalinklayer tránh collision medium
+
+
+Bài tập:
+Line encoding
+Các đơn vị đánh giá: data unit, data rate, bit rate, signal rate, baud rate, frequency
+Flow control các bài tập
+Congestion control
+
+
+Kiến thức khó nhớ:
+IPv4 32bits, IPv6 128bits, MAC 48bits
+Nâng cấp ADSL lên FTTH. ADSL(Asymmetric Digital Subscriber Line - đường dây thuê bao số bất đối xứng) là 1 dạng của DSL, là 1 data communication technology cho phép truyền data nhanh hơn trên đường dây điện thoại so với kiểu truyền thống. Còn FTTH là Fiber to the Home là công nghệ dùng sợi quang trực tiếp từ điểm trung tâm đến các khu dân cư.
+HTTP chạy trên port 80.
+host name là phần đầu, domain name là phần đuôi
+ARP là protocol tầng datalink
+Parity code thg dùng trong hardware như gửi data trên PCIorr SCSI bus. Còn CRC dùng trong wifi, ATM, ethernet
+Slotted Aloha dùng trong mobile network 3G dùng GSM technology
+LAN standard: 802.3: Ethernet 
+802.4: Token bus 
+802.5: Token ring 
+802.11 a/b/g/n: Wireless LAN (Wifi) -> CSMA/CA
+802.16: WiMax.
+Datalink=LLC+MAC
+Classical Ethernet dùng: bus topo, CSMA/CD, Manchester, coaxial
+Switched Ethernet dùng: star topo, central switch Ethernet, no MAC
+Repeater và hub là layer1, bridge và switch là layer2
+Private address: 10.0.0.0/8  172.16.0.0/12  192.168.0.0/16
+Multicast address: 224.0.0.0
+Self assigned IP address: 169.254.0.0/16
+Trong IPv6: Fix 64 first bit for subnet ID, 64 last bit belongs to interface ID
+Open connection SYN và ACK
+Close connection FIN và ACK
+301 moved permanently
+400 bad request
+505 HTTP version not support
 

@@ -11,20 +11,24 @@ VNIX: hệ thống chuyển đổi giữa các nhà mạng. Các ISP liên kết
 
 
 -> Routing alg:
-Người ta dùng graph để biểu diễn network, có weight ở các edge. Mỗi node có 1 Shortest path tree(SPT).
-Có 2 classes of routing alg là link-state(lấy info tạo graph, run alg, build route table cho node) và distance vector(mỗi node build 1 temporary routing table và exchange để có better route). 
+Người ta dùng graph để biểu diễn network, có weight ở các edge biểu diễn congestion, bandwidth. Mỗi node có 1 Shortest path tree(SPT).
+Có 2 classes of routing alg là link-state(lấy info tạo graph, run alg, build route table cho node) và distance vector(mỗi node build 1 temporary routing table và exchange các table để có better route). 
 
 Link state VD dùng Dijikstra, Distance vector dùng Bellman-Ford. Link state thì complexity là O(n^2), O(nE) message được exchange với n node và E links, khi 1 router bị lỗi thì mỗi node có 1 routing table riêng và router đó sẽ gửi giá trị sai, dùng OSPF routing protocol. 
 Distance vector thì complexity k cố định, khi có lỗi sẽ gửi distance vector sai và mỗi node tính distance vector của riêng nó dựa vào thông tin nó nhận được từ các node lân cận làm error lan ra cả network, dùng RIP routing protocol.
 
+Bài áp chót
+Ở dạng bài của congestion control, ý của nó là thời gian transmit tất cả data nhanh nhất là thời gian transmit hết mọi frame + RTT vì lần cuối cũng có tính. Chỉ có k waiting gì cả mới là tg transmit nhanh nhất thôi, ta phải tìm lượng sliding window
+Khi cần tìm tổng thời gian transfer file ta mới dùng đến kích thước file L
 
 -> Bài cuối của congestion control:
 S/R là thời gian gửi xong 1 gói tin, thời gian này là kc nhỏ nhỏ giữa 2 lần gửi data ở cột bên trái
 Cho k là số cycle thì k start từ 0. Ở cycle k thì cwnd = 2^k
 Ở cycle k thì Sender đã gửi 1 + 2^1 + 2^2 + 2^3 +... + 2^k = 2^(k+1)-1 tới đích
 Ta có N = O/S tức số lượng package hay window cần gửi = 2^(k+1)-1 thế tìm k ~ 7
-T = k*RTT là thời gian gửi hết file. Ở đây chỉ đúng khi transmit luôn phải waiting
-Chú ý pb O/S là số lượng window và S/R là thời gian transmit 1 window. Ở Th này ta k dùng R vì ta k đụng đến thời gian transmit các window => 2 cách tính. Cái R thg sẽ phải dùng khi cần tìm minimum transmitting time.
+T = k*RTT là thời gian gửi hết file. Ở đây chỉ đúng khi transmit luôn phải waiting. Vì vói các bài time transfer 1 segment quá nhỏ, nó lấy xấp xỉ là RTT luôn.
+Đáng ra time cycle n = max(time trans1 segment + RTT, time trans n segment)
+Chú ý pb O/S là số lượng window và S/R là thời gian transmit 1 window. Ở Th này ta k dùng R vì ta k đụng đến thời gian transmit các window => 2 cách tính. Cái R thg sẽ phải dùng khi cần tìm time.
 K: số lượng cycle 
 VD ở đây O/S là 200 là số lượng window cần gửi đi thì
 2^(k+1)-1 > 200 => K >= 7 tức k=7 là số lượng cycle tối thiểu cần => time transmit 

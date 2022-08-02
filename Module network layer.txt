@@ -1,6 +1,9 @@
 Network layer:
 Vai trò là xây path(routing alg) và truyền data theo path(internet protocol) -> dùng Router có routing table làm intermediate node.
 
+Chỉ cần nắm IP address và IP package truyền đi là xong, ICMP là phụ cho IP package thôi.
+Cách truyền có 2 thứ: khác mạng cần router, cùng mạng cần switch là được; fowarding theo routing table;
+
 
 # IP address:
 Có v4 32bits và v6 128bits
@@ -12,7 +15,7 @@ Khi byte đầu có giá trị nằm trong khoảng
 A: 0 -> 127
 B: 128 -> 191
 C: 191 -> 223
-VD:  Class C có 256 host, nếu dùng 300 host thì cần chuyển sang class B, tùy biến.
+VD: Class C có 256 host, nếu dùng 300 host thì cần chuyển sang class B, tùy biến.
 VD: 10.10.10.9 thuộc class A; 192.168.70.5 thuộc class C.
 
 -> CIDR: 
@@ -57,7 +60,7 @@ IP protocol thực chất giống UDP và k đáng tin, tuy nhiên có thể dù
 TTL của packet sinh ra để tránh bad routing khi 2 router A và B cứ forward mãi loop cho nhau. 
 Trường header checksum là error detection code chỉ check error for only header thôi, qua mỗi router nó đều check.
 Layer 2 có MTU thì package chỉ cho size MTU max được truyền qua, lớn hơn sẽ break thành nhiều gói. Mỗi gói mang có 1 IP header riêng và có 1 ID riêng. ID đó nằm trong trường identifier 16bit của header.
-Còn có version, header length, DS(Type of Service), length, ID of fragmented packet, source IP, des IP.
+Còn có version, header length, DS(Type of Service), length, source IP, des IP.
 
 -> Packet fragmentation: 
 Packet size lớn hơn MTU thì chia ra gửi r hợp lại ở cuối.

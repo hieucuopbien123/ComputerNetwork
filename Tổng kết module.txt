@@ -29,20 +29,22 @@ Header các tầng trên k đổi nhưng header từ tầng mạng trở đi tha
 -> Identification:
 Port number: Transport layer
 IP address: Network layer
-MAC(physical) address: Datalink layer. Mac address k có khả năng routing như IP address
+MAC(physical) address(48 bits): Datalink layer. Mac address k có khả năng routing như IP address
 
 
 
 # DNS
-Muốn nslookup vào DNS server phải có mạng. DNS là protocol tầng ứng dụng
+Muốn nslookup vào DNS server phải có mạng. DNS là protocol tầng ứng dụng dùng UDP/TCP cổng 53
+
+DNS use TCP for zone transfer and UDP for name queries. UDP can be used to exchange small information safely and TCP can be used to exchange info larger than 512 bytes. Tức nó dùng cả 2 protocol
 
 -> Domain name:
 Coi là 1 dạng khác của IP address
 
 -> (Address Resolution Protocol)ARP table và RARP table:
-The ARP table is stored in the RAM of the device chứa mapping và TTL.
+The ARP table is stored in the RAM of the device chứa mapping IP address/MAC address và TTL.
 
-MAC Address và IP Address đều xác định duy nhất 1 máy nhưng tại sao người ta k chỉ dùng 1 trong 2 mà phải dùng cả 2. Bởi vì MAC Address là cố định xác định NIC do nhà sản xuất đặt ra, nếu ta tạo 1 hệ thống khép kín k tương tác với mạng global internet thì dùng MAC address luôn được vì tầng data link cho phép truyền dữ liệu trực tiếp giữa các máy bằng MAC Address nhanh mà k cần convert từ IP mà thậm chí chả cần IP. Còn IP dùng trong hệ thống cần tương tác với global internet, nó có 1 tầng riêng. Các máy ở cực xa nhau k thể biết MAC address của nhau được nhưng truy xuất được IP address của nhau nên phải dùng cả 2, IP tuân theo 1 chuẩn chung để routing.
+MAC Address và IP Address đều xác định duy nhất 1 máy nhưng tại sao người ta k chỉ dùng 1 trong 2 mà phải dùng cả 2. Bởi vì MAC Address là cố định xác định trên NIC do nhà sản xuất đặt ra, nếu ta tạo 1 hệ thống khép kín k tương tác với mạng global internet thì dùng MAC address luôn được vì tầng data link cho phép truyền dữ liệu trực tiếp giữa các máy bằng MAC Address nhanh mà k cần convert từ IP mà thậm chí chả cần IP. Còn IP dùng trong hệ thống cần tương tác với global internet, nó có 1 tầng riêng. Các máy ở cực xa nhau k thể biết MAC address của nhau được nhưng truy xuất được IP address của nhau nên phải dùng cả 2, IP tuân theo 1 chuẩn chung để routing.
 MAC address 48 bit dùng ở datalink còn IP address 32 bit dùng ở network layer
 
 -> Phân chia không gian tên miền:
@@ -52,8 +54,8 @@ DNS có sơ đồ cây, chia nhiều nhánh với các zone. 1 zone sẽ do 1 m�
 
 -> DNS server:
 --> Root server: quản lý 1 list TLD nameserver dựa vào extension
---> TLD nameserver: lưu thông tin về top-level domain như .com .org .net ...
---> Authoritative nameserver: từng node lưu DNS record cuối cùng chứa các bản ghi có thông tin chi tiết hơn
+--> TLD nameserver: lưu thông tin về top-level domain như .com .org .net ... IANA
+--> Authoritative nameserver: từng node lưu DNS record cuối cùng chứa các bản ghi có thông tin chi tiết hơn, chi tiết ánh xạ
 
 -> DNS message
 
@@ -62,7 +64,7 @@ Resolver là default server khi request được gửi đến đầu tiên từ 
 
 --> Tự phân giải: bộ đệm ứng dụng
 --> Dịch vụ phân giải tên miền: client server
----> Phân giải đệ quy: resolver hỏi root, root tự hỏi TLD, TLD tự hỏi authoritaive nameserver
+---> Phân giải đệ quy: resolver hỏi root, root tự hỏi TLD, TLD tự hỏi authorative nameserver
 ---> Phân giải tương tác: resolver hỏi trực tiếp từng DNS server từ root, TLD, authoritative
 
 
@@ -72,7 +74,7 @@ Có topology dây các kiểu, nhưng cũng có topology k dây WLAN
 
 -> LAN Standard/802.3 Ethernet: 
 Ethernet standard xác định trong 2 tầng datalink và physical. 2 tầng này có các attribute khác nhau tạo ra Ethernet có tính chất khác nhau. Layer 2 tech.
-Thông thường khi A gửi tin cho B thì A kb MAC address of B mà chỉ biết IP of B mà thôi. A phải boardcast ARP package chứa IP của B để truyền qua mạng và B nhận được sẽ trả lại MAC của B cho A lưu vào. A self learning MAC address của B đó.
+Thông thường khi A gửi tin cho B mà cần dùng datalink layer thì A kb MAC address of B mà chỉ biết IP of B mà thôi. A phải boardcast ARP package chứa IP của B để truyền qua mạng và B nhận được sẽ trả lại MAC của B cho A lưu vào. A self learning MAC address của B đó.
 
 Mỗi sự thay đổi trong physical layer và datalink layer sẽ tạo ra 1 loại mạng ethernet riêng với loại dây khác nhau, tốc độ truyền khác nhau.
 
@@ -82,17 +84,20 @@ Bus topology nên chung dây, MAC dùng CSMA/CD, coaxial cable
 
 --> Switched Ethernet: bh toàn dùng
 Star topology central switch Ethernet, k collision k cần media access control tầng datalink
-Điều đặc biệt là tùy loại LAN topology khác nhau mà cần MAC protocol hay không VD star topology thì k share chung medium nên k cần dùng MAC protocol để tránh collision
+Điều đặc biệt là tùy loại LAN topology khác nhau mà cần MAC(media access control) protocol hay không VD star topology thì k share chung medium nên k cần dùng MAC protocol để tránh collision
 
 -> Devices
 Repeater < Hub < Bridge < Switch
 
---> Hub: forward signal to remaining port, layer1
 --> Repeater: lặp bit từ port này sang port khác
+--> Hub: forward signal to remaining port, layer1
 --> Bridge: Forward data dựa vào MAC address, layer 2
 --> Switch: 
 Forward data dựa vào MAC address, nhiều port hơn bridge. Nó có table of MAC address và self learning mechanism để xây cái table.
 Switch do có nhiều port nên nó hỗ trợ send data giữa các host k collision.
+
+=> Tức là khi gửi data cùng mạng hay khác mạng thì vẫn phải dùng 2 tầng datalink và physical. Khi khác mạng sẽ cần vai trò tầng network để forward theo IP qua router. Khi cùng mạng thì chỉ cần tìm thông qua MAC address của switch(k cần qua router nữa) nhưng vẫn cần vai trò tầng network để lấy cái IP vì. Đầu tiên nó gửi đi check MAC address có trong table k, nếu k có nó gửi tìm theo IP bằng ARP protocol để lấy MAC address lưu vào table, r lại tìm tiếp theo MAC address qua bảng của switch đến đích.
+Router lưu bảng IP vào interface nào. Switch lưu bảng MAC address vào interface nào
 
 => Layer 2 là các thiết bị forward dựa vào MAC address hay các thứ. Layer 2 device có các layer 2 protocol.
 
@@ -109,7 +114,7 @@ Khi nhiều thiết bị cùng tương tác với 1 thiết bị, cần xử lý
 S check nếu channel liên kết với R có available trong khoảng thời gian DIFS time hay không. Rảnh thì gửi. Nếu bận thì chờ đợi 1 khoảng thời gian random gọi là back-off. Sau backoff thì send data, nếu k nhận được ACK của cục vừa send(tức là channel vẫn chưa available) thì nhân đôi backoff và lại chờ và cứ tiếp tục như v. Do wireless truyền tin kp dễ dàng nên khó bắt phải làm như v. Còn phía receiver chỉ cần chờ nhận frame thì gửi lại ACK sau SIFS thôi. 
 
 ---> RTS-CTS: 
-Để avoid collision thì R có reserve channel k cho phép random access để k ai được gửi tới nó bừa bãi, rồi S có thể gửi RTS tới R bằng CSMA. Đặc điểm của frame này là rất ngắn nên ít khi xảy ra collision(càng lớn càng dễ collision). R sẽ boardcast trả lại CTS. Mọi station nhận CTS có thể gửi data frame tiếp, các station khác chậm chân sẽ phải cancel và chờ tiếp.
+Để avoid collision thì R có reserve channel k cho phép random access để k ai được gửi tới nó bừa bãi, rồi S có thể gửi RTS tới R bằng CSMA. Đặc điểm của frame này là rất ngắn nên ít khi xảy ra collision(càng lớn càng dễ collision). R sẽ boardcast trả lại CTS nếu rảnh. Mọi station nhận CTS có thể gửi data frame tiếp, các station khác chậm chân sẽ phải cancel và chờ tiếp.
 
 
 
@@ -233,23 +238,24 @@ Tính toán thì chơi cả phần lẻ, VD tính thời gian tổng gửi đi h
 Network layer chỉ quan tâm đến data bw host truyền qua global internet còn transport layer mới chỉ định vào ứng dụng nào
 Transport layer được assigned for each app running on a port. Nên nhớ 1 app chỉ được chạy ở 1 port và nó như id của app đó. Mỗi ứng dụng khi communicate outside đều dùng 1 transport port là socket(1 loại address) là combination of IP address và port gắn với ứng dụng đó. Khi send message vào address này sẽ tự gửi cho ứng dụng ở máy kia.  
 VD: Network A có ứng dụng zalo chạy ở port 1 gửi tin tới ứng dụng zalo ở port 4 của network B thì gói tin được gửi đi có source port là 1, destination port là 4. 
-Số lượng port tức là có thể có hơn 60000 ứng dụng chạy same time trên 1 máy.
+Số lượng port tương đương với việc có thể có hơn 60000 ứng dụng chạy same time trên 1 máy.
 2 ứng dụng zalo muốn tương tác thì k thể truyền qua web bth mà phải vào mạng zalo, transport layer giúp xác định end app, đâu là nơi đầu cuối cần tương tác.
 
-Package ở tầng transport nó đóng gói gọi là segment, ở tầng application gọi là message, ở 4 tầng nó đều có tên gọi khác nhau. 
+Data trong ứng dụng ở tầng Application đính HTTP vào gọi là message -> xuống tầng transport đóng vào từng segment có TCP segment -> tầng network đóng IP header vào thành IP package -> tầng datalink đóng packet vào thành frame 5 chức năng -> physical biến nó biến thành voltage signal truyền qua dây.
 
 -> MUX/DEMUX:
 Ứng dụng web máy A -> transport layer của A -> multiplex data -> gửi qua các node trung gian. Lưu ý các node trung gian chỉ dùng 3 tầng dưới chứ k dùng transport layer -> gửi máy B -> transport layer máy B demultiplex -> ứng dụng web máy B.
 
 -> UDP: connectionless, k kiểm soát lỗi và tắc nghẽn
 Khi dùng UDP, nó k có cơ chế check lỗi mà ứng dụng nào dùng nó phải tự implement cơ chế control error. 
-UDP có EDC check lỗi của whole data, nó từ chối nhận package khi xảy ra lỗi nhưng vấn đề là nó k inform để bảo sender gửi lại package bị lỗi. 
+UDP có EDC check lỗi của whole data, máy nhận từ chối nhận package khi xảy ra lỗi nhưng vấn đề là nó k inform để bảo sender gửi lại package bị lỗi. 
 
 Why does UDP exist? Would it not have been enough to just let user processes send raw IP packets?
 => By using UDP, a segment will be delivered correctly to the specified application because UDP uses source and destination ports while raw IP packet does not include ports. That is, a segment cannot be delivered to a specified application as a raw IP packet.
 
 -> TCP: connection-oriented
 Cơ chế connection tạo reliable service: thiết lập connection, close connection, transfer data.
+Điều đặc biệt là phía gửi là phía ít phải lo và phía nhận là phía phải xử lý nhiều nên khi thiết lập connection TCP lần đầu tiên, chỉ phía nhận phải tạo 1 buffer và mọi thứ sẽ đi vào đó trước r mới được xử lý.
 
 Vd truyền tin TCP:
 A data stream: [41 bytes]|['Hello'][...]
@@ -274,32 +280,36 @@ Error control có thể dùng NAK or k dùng NAK. Nếu k dùng NAK nó chỉ c�
 --> Error control gửi đi gửi lại cũng có thể dùng StopAndWait hoặc pipeline(pipeline nó giống sliding window trong data link layer).
 
 -> Flow control: kiểm soát lượng data send, Rwnd, Cwnd. Slide quá perfect theo trình tự thời gian
+Điều đặc biệt là mỗi phản hồi của R đều chứa Rwnd
+Nó cơ bản ở chỗ chỉ: sliding window or stop and wait và Rwnd, Cwnd
 
 -> Congestion control: Slide quá perfect theo trình tự thời gian.
-Congestion control cũng là thứ mà system phải xử lý để đảm bảo tính đáng tin cậy của protocol TCP. Data flow chỉ quyết định dùng stop and wait hay sliding window để bên receiver k bị overload.
-Khi truyền tin qua mạng sẽ đi qua hàng đông intermediate node là router thì các intermediate node có thể bị overload khi quá nhiều cặp sender-receiver hoạt động thì buffer của nó bị full và k nhận thêm nx khiến các package bị lost => khi đó phải dùng congestion control vì nó chi tiết các gửi gói tin đi như thế nào để tránh tăc.
-Cơ chế là nếu ta tìm được node nào bị overload thì ta có thể bảo source giảm speed lại để tránh overload nhưng transport layer k cho phép làm vc nó mà chỉ cho biết source và des thôi. Ta có thể dựa vào ACK để biết khi nào gói tin chưa được gửi đén được đích. Cơ chế hiển nhiên của TCP đã là v tức khi k gửi tới đích thì đích sẽ tiếp tục send ACK để yêu cầu gửi gói tin gì. Đã tắc xong source lại gửi lại tắc tiếp.
+Nó cơ bản ở chỗ chỉ học đúng 2 giai đoạn diễn ra như nào là xong
+Congestion control cũng là thứ mà system phải xử lý để đảm bảo tính đáng tin cậy của protocol TCP. Data flow chỉ quyết định dùng stop and wait hay sliding window để bên receiver k bị overload. Còn ở đây nếu có quá nh cặp S-R khiến đường dây k tải nổi
+Khi truyền tin qua mạng sẽ đi qua hàng đông intermediate node là router thì các intermediate node có thể bị overload khi quá nhiều cặp sender-receiver hoạt động thì buffer của nó bị full và k nhận thêm nx khiến các package bị lost hoặc đơn giản là buffer éo full nhưng mà gói tin k đến được đích vì tắc nghẽn ngay trên đường truyền => khi đó phải dùng congestion control vì nó chi tiết các gửi gói tin đi như thế nào để tránh tăc.
+Cơ chế là nếu ta tìm được node nào bị overload thì ta có thể bảo source giảm speed lại để tránh overload nhưng transport layer k cho phép làm vc nó mà chỉ cho biết source và des thôi. Ta có thể dựa vào ACK để biết khi nào gói tin chưa được gửi đén đích. Cơ chế hiển nhiên của TCP đã là v tức khi k gửi tới đích thì đích sẽ tiếp tục send ACK để yêu cầu gửi gói tin gì. Đã tắc xong source lại gửi lại tắc tiếp.
 
 2 quá trình Slow start and congestion avoidance. Nếu congestion avoidance tăng dần đến khi bị tắc thật sự(detect bằng packets lost) thì quay lại từ đầu slow start(timeout) or đầu congestion avoidance(tắc k tới đích, nhận 3 ACK trùng), đều giảm ssthresh đi 1 nửa.
 
-cwnd là congestion window là lượng data có thể send tới đích mà k chờ ACK trong congestion control
-rwnd là congestion window là max data size mà đích có thể nhận
+cwnd là congestion window là lượng data S có thể send tới đích mà k chờ ACK trong congestion control, được khởi tạo là 1 và điều chỉnh tùy vào độ tắc nghẽn
+rwnd là congestion window là max data size mà đích có thể nhận(=size of buffer)
 => Lượng data có thể send tới đích mà k chờ ACK là min(cwnd, rwnd)
 Khởi tạo cwnd là 1 lần MSS và tăng dần khi nhận được ACK từ receiver -> tăng chậm nhưng lại theo cấp số mũ
 
 
 
 # Application layer
-Application nói chung cho mọi người hiểu là v nhưng bản chất nó cũng chỉ là 1 process chạy trên 1 máy. 2 máy chạy cùng 1 app nhưng thực ra 2 process là hoàn toàn khác nhau. Application protocol định nghĩa cách các process giao tiếp với nhau.
+Application nói chung cho mọi người hiểu là v nhưng bản chất nó cũng chỉ là 1 process chạy trên 1 máy. 2 máy chạy cùng 1 app nhưng thực ra 2 process là hoàn toàn khác nhau. Application protocol định nghĩa cách các process giao tiếp với nhau, từng phần của ứng dụng giao tiếp với nhau.
 Vd tương tác giữa client và server: client gửi data tới server, server nhận được và check nếu data login thì gửi OK, nếu là chatmessage sẽ forward tới client đích(mô hình client server chứ kp P2P truyền trực tiếp) => Để server check được loại data và gửi như v thì phải nhờ đến tầng App vì kể từ tầng transport trở xuống chỉ cho biết gửi tới IP đích là gì thôi, cụ thể ứng dụng thì phải là tầng App. Nó xác định sử dụng giao thức gì. Mỗi ứng dụng có 1 app layer riêng.
 
 -> Socket:
 Xác định bởi IP address, port và transport protocol nằm giữa App và Transport layer. Nhờ socket mà ứng dụng biết cần dùng transport service với parameter là gì.
+Tức ứng dụng k cần biêt tầng transport làm gì, nó chỉ cần biết ứng dụng cần gửi data gì, socket cung sẵn cổng, ip address, protocol để truyền, ứng dụng chỉ cần implements vc sử dụng thôi
 
--> Architecture: client/server, P2P, hybrid(vừa client server, vừa P2P)
+-> Architecture: client/server, P2P, hybrid(vừa client server, vừa P2P sau khi authentication)
 
 -> HTTP:
-Open TCP socket mặc định cổng 80, thiết lập TCP connection, server chấp nhận, trao đổi HTTP message, close connection
+Server open TCP socket mặc định cổng 80, thiết lập TCP connection, server chấp nhận, trao đổi HTTP message, close connection
 HTTP request and response, status code
 
 --> HTTP/1.0 sẽ tạo ra 1 connect mới cho mỗi request. VD ta gửi file index.html bên trong request thêm 10 bức ảnh. Nó tạo connection và gửi và close và cứ lặp lại liên tục 11 lần. H cũng ít dùng.
@@ -325,7 +335,7 @@ SMTP k an toàn về mặc định vì k yêu cầu login và tin ko được m�
 
 --> Form thư gửi(header và body), MIME(khi cần chuyển đa phương tiện)
 
---> FTP
+--> FTP: cổng 20, 21
 
 
 
@@ -333,3 +343,37 @@ SMTP k an toàn về mặc định vì k yêu cầu login và tin ko được m�
 BER(Bit Error Rate = số bit lỗi / tổng số bit truyền) phản ánh đặc trưng về độ tin cậy của đường truyền.
 
 Ngoài ra còn có Border Gateway Protocol (BGP) là giao thức định tuyến là gateway protocol cho phép tìm đường đi gói tin giữa các vùng tự trị (autonomous systems - AS)
+
+Tổng quan: 2 transmission model
+Physical: Loại dây media, loại encoding và các đơn vị đánh giá
+Datalink: Media access control, Flow control, Error control
+  LAN: 2 loại ethernet, 4 thiết bị, k dây có multiple access control CSMA và RTS-CTS
+Network: Classful IP, CIDR, ICMP, foward theo routing table
+Transport: UDP/TCP, error control, flow control, congestion control
+Application: Architecture, HTTP, SMTP, FTP
+  DNS: 3 loại server, 2 cơ chế phân giải
+
+Datalink nó dùng EDC, CRC, Parity code nhưng Transport nó dùng NAK/ACK cơ. Transport nó tách tin thành tưng gói nhỏ và gửi đi thì nó dùng luôn vc bảo gửi gói nào cx là bảo gửi lỗi như thế nào kiểu thế cho tiện. Còn dây vật lý khi gửi cả cục data đi nó cần check lỗi theo kiểu bth như v là đúng r. Chứ nếu dây vật lý mà dùng ACK/NAK thì rõ vô lý vì nó chỉ biết gửi đi chứ có cần nhận lại để bảo là gửi lại gói tin thứ bao nhiêu như ta làm ở tầng Transport đâu. Do đó physical nó cần 1 cái check nhanh rằng gửi từ A sang B thì B check có lỗi hay k mà thôi chứ tầng vật lý k đánh dấu gói tin để bảo gửi lại như v, nó chỉ lo truyền vật lý k đứt dây, k nghẽn gì cả là được, các thứ khác tầng trên lo.
+
+Cách dùng checksum: là vc check data nhận được có đúng với data cần gửi thì gửi kèm checksum
+VD: thông tin cần truyền 11011010 10011001 11100010 00100100 10000100 thì giả sử dùng checksum là mã 8bits thì ta cộng lại từng số và lấy kết quả là đoạn bit dài vô hạn:
+    10011001 
+    11100010 
+    00100100 
+    10000100
+= 1000100011 => chú ý ở đây nó dư 10 vì bit cuối tạo dư 1 nhưng 1+1+1+1 thì đáng lẽ là 0 dư 1 nhưng ta đang cộng với độ dài vô hạn tức có thể lấy 2 cái đầu cộng lại ra 10 xong lại lấy 10 + 10 ra 100 ở đầu còn gì. Tiếp tục cắt số dư và cộng và phần gốc:
+00100011 + 10 = 00100101 đảo bit ra có checksum: 11011010
+
+Để check: ta cộng tất cả lại phải ra toàn bit 1
+    11011010
+    10011001 
+    11100010 
+    00100100 
+    10000100
+= 1011111101
+=> làm tương tự: 11111101 + 10 = 11111111
+
+Fast Ethernet có max speed truyền là 100Mbps
+
+VD: sender gửi với congestion window là 4200, ssthreshold là 12000, receiver gửi data lại với Rwnd là 9800, thì lần sau receiver gửi bao nhiêu window
+=> 8400 vì min(cwnd, rwnd) và lần sau thì giả sử ACK nhận về hêt nên v
