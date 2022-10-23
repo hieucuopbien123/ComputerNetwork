@@ -1,0 +1,8 @@
+Internet working
+
+
+# Basic
+Network là các kỹ thuật giúp truyền tin giữa 2 điểm có kc bất kỳ transparently with resonable price. VD: dùng optical fiber or wireless media.
+Nó được tạo bởi 3 component cơ bản: cáp, thiết bị đầu cuối, nút mạng(router, gateway)
+=> 2 thứ quan trọng nhất về resource của transmission system là transmission rate và bandwidth
+

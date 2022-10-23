@@ -125,7 +125,7 @@ Transmission system có thể là local network, wide-area network, medium, ampl
 
 -> Media:
 --> Wired:
----> Twisted Pair: xoắn, dùng phổ biến. Có unshield twisted pair và shield twisted pair.
+---> Twisted Pair: xoắn, dùng phổ biến. Có unshield twisted pair và shield twisted pair(có bọc kim chống nhiễu)
 ---> Coxial Cable: dùng cho TV, telephone transmission
 ---> Fiber Optics: dùng cho metropolitan or connect router of ISP, có single mode or multimode
 
