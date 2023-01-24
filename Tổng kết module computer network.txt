@@ -4,13 +4,22 @@ Computer Network:
 # Basic
 -> Mạng máy tính là các thiết bị connect theo 1 cấu trúc để trao đổi data
 --> Topology: cấu trúc là gì
+Topology có nhiều loại như Ring chính là bus được nối 2 đầu, trong ring thì chỉ transfer được theo 1 chiều.
+Mesh thì thg k dùng cho local vì k cần thiết phải nối nhiều connection trong 1 phạm vi nhỏ
 --> Protocol: là cách 2 node connect và gửi nhận tin
 
 -> Transmission model
 --> Circuit switching: connect dùng full bandwidth
+Mô hình: A ___[Cross link - switching center]____[Crosslink]___...___[Cross link - switching center]___subscriber B
+=> Khi thiết lập connection, các cross link sẽ được reserver for A và B. B ở đây là subscriber. Khi hủy connection sẽ release cho những người khác
+=> Là bidirectional có delay nhỏ phù hợp cho các ứng dụng truyền âm thanh và hình ảnh
+=> Chính vì nó chiếm full bandwidth nên giá thành tương đương với duration of call vì có giới hạn, trong quá trình 1 người dùng nó, người khác k thể dùng.
+=> Nó có low effiency nên dùng packet switching
 
---> Package switching: chia gói dùng chung
----> Datagram switching: route khác nhau
+--> Package switching: chia gói dùng chung có [data + địa chỉ] => thg dùng cho truyền message text
+A truyền 2 package tới router default và được lưu trong buffer, router read buffer r truyền từng package tới từng link khác tới router khác
+
+---> Datagram switching: route khác nhau, chọn best next-hop
 ---> Virtual circuit switching: fixed route, đúng thứ tự
 
 --> Connection oriented transmission và connectionless
@@ -72,7 +81,7 @@ Resolver là default server khi request được gửi đến đầu tiên từ 
 # LAN: 
 Có topology dây các kiểu, nhưng cũng có topology k dây WLAN
 
--> LAN Standard/802.3 Ethernet: 
+-> LAN Standard/802.3 Ethernet(chuẩn của mạng LAN là 802.X): 
 Ethernet standard xác định trong 2 tầng datalink và physical. 2 tầng này có các attribute khác nhau tạo ra Ethernet có tính chất khác nhau. Layer 2 tech.
 Thông thường khi A gửi tin cho B mà cần dùng datalink layer thì A kb MAC address of B mà chỉ biết IP of B mà thôi. A phải boardcast ARP package chứa IP của B để truyền qua mạng và B nhận được sẽ trả lại MAC của B cho A lưu vào. A self learning MAC address của B đó.
 
@@ -96,6 +105,7 @@ Repeater < Hub < Bridge < Switch
 Forward data dựa vào MAC address, nhiều port hơn bridge. Nó có table of MAC address và self learning mechanism để xây cái table.
 Switch do có nhiều port nên nó hỗ trợ send data giữa các host k collision.
 
+LAN ở layer 1 và 2
 => Tức là khi gửi data cùng mạng hay khác mạng thì vẫn phải dùng 2 tầng datalink và physical. Khi khác mạng sẽ cần vai trò tầng network để forward theo IP qua router. Khi cùng mạng thì chỉ cần tìm thông qua MAC address của switch(k cần qua router nữa) nhưng vẫn cần vai trò tầng network để lấy cái IP vì. Đầu tiên nó gửi đi check MAC address có trong table k, nếu k có nó gửi tìm theo IP bằng ARP protocol để lấy MAC address lưu vào table, r lại tìm tiếp theo MAC address qua bảng của switch đến đích.
 Router lưu bảng IP vào interface nào. Switch lưu bảng MAC address vào interface nào
 
@@ -109,7 +119,7 @@ Standard 802.11 LAN có access point và base station. Access Point là nơi cá
 ---> Active scanning: chủ động request tìm AP
 
 --> MAC:
-Khi nhiều thiết bị cùng tương tác với 1 thiết bị, cần xử lý collision trên môi trường k dây khá khó.
+Khi nhiều thiết bị cùng tương tác với 1 thiết bị, cần xử lý collision trên môi trường k dây khá khó. Vì mạng LAN kết nối nội bộ nên dễ xảy ra xung đột và cần có nhiều PP mạnh để xử lý điều này.
 ---> CSMA/CA: 
 S check nếu channel liên kết với R có available trong khoảng thời gian DIFS time hay không. Rảnh thì gửi. Nếu bận thì chờ đợi 1 khoảng thời gian random gọi là back-off. Sau backoff thì send data, nếu k nhận được ACK của cục vừa send(tức là channel vẫn chưa available) thì nhân đôi backoff và lại chờ và cứ tiếp tục như v. Do wireless truyền tin kp dễ dàng nên khó bắt phải làm như v. Còn phía receiver chỉ cần chờ nhận frame thì gửi lại ACK sau SIFS thôi. 
 
@@ -125,9 +135,9 @@ Transmission system có thể là local network, wide-area network, medium, ampl
 
 -> Media:
 --> Wired:
----> Twisted Pair: xoắn, dùng phổ biến. Có unshield twisted pair và shield twisted pair(có bọc kim chống nhiễu)
+---> Twisted Pair: xoắn, dùng phổ biến. Có unshield twisted pair và shield twisted pair(có bọc kim chống nhiễu). Loại này low rate, kém hơn coxial.
 ---> Coxial Cable: dùng cho TV, telephone transmission
----> Fiber Optics: dùng cho metropolitan or connect router of ISP, có single mode or multimode
+---> Fiber Optics: dùng cho metropolitan or connect router of ISP, có single mode or multimode. Loại này có small attenuation, small bit error rate, high transfer rate vì có hiện tượng phản xạ toàn phần
 
 --> Wireless:
 ---> Infrared: tia hồng ngoại k xuyên được tường

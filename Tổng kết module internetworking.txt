@@ -1,8 +1,163 @@
 Internet working
 
 
+
 # Basic
 Network là các kỹ thuật giúp truyền tin giữa 2 điểm có kc bất kỳ transparently with resonable price. VD: dùng optical fiber or wireless media.
 Nó được tạo bởi 3 component cơ bản: cáp, thiết bị đầu cuối, nút mạng(router, gateway)
-=> 2 thứ quan trọng nhất về resource của transmission system là transmission rate và bandwidth
+=> 2 thứ quan trọng nhất về resource của transmission system là transmission rate và bandwidth. Bandwidth tỉ lệ với rate 
+
+Khi truyền tin, electrical signal có thể truyền theo 2 chiều và bị collision làm ngưỡng điện áp k còn như ban đầu và phải dùng các thuật toán multiple access để reduce collision. 
+
+Chuỗi furie là chuỗi có sin cos có tác dụng biến đổi 1 đồ thị theo 1 trục sang tọa độ trục khác. VD từ (time, amp) --Furie--> (frequency, amp)
+
+-> Các thông số đánh giá network:
+Successful Effiency: VD 1 cable có thể transfer 10Mb/s và truyền thành công 8Mb/s thì SE = 80%
+Fairness: là đo xem mọi người truy cập vào mạng đều có tốc độ access là như nhau. 
+
+
+
+# Chuyển đổi analog sang digital:
+Signal có thể bd bằng time or frequency -> cần pb khi nhìn bđ
+Nếu dùng time mới chia 2 loại analog và digital.
+
+Xét VD voice có spectrum 0-4Khz
+-> Đầu tiên cần lấy sampling. VD xét 1 tín hiệu analog trong 1s, nó là continuous. Nhưng ta dùng tần số là 8000Hz trên đồ thị chia nhỏ 1s đó ra 8000 lần. Tức là thay vì transfer continuous signal trong 1s, ta chỉ cần transfer 8000 decrete signal trong 1s
+
+-> Quantization: bước 1 đã chia theo sự đổi của thời gian, ta cần chia theo sự đổi của cường độ. 
+
+-> Dùng bit để biểu diễn level
+=> refer tới "Tài liệu Internetworking"
+
+
+
+# Pitfalls
+Chuẩn IEEE có chuẩn mạng cục bộ 802 ở layer 1 và 2 
+Kết nối mạng global ở layer 3 với giao thức IP
+
+Etherenet IEEE 802.3 dùng CSMA 1 persistent, buộc phải nối dây mới dùng được. Còn wifi k dùng chuẩn này mà dùng CSMA/CA thì k dây.
+
+
+
+# Truy cập ngẫu nhiên: aloha, csmaca, csmacd,..
+
+Aloha: Cứ có là truyền chiếm tài nguyên
+Đánh giá hiệu năng aloha: Tại thời điểm t0, trạm i có dữ liệu để truyền sẽ chiếm luôn tài nguyên đường truyền, giả sử gói tin có t bit sẽ mất t0+ts => mất ts để chiếm xong tài nguyên (or phát xong tín hiệu lên đường truyền) và chiếm trên đường truyền trong khoảng L/t với L là độ dài đường truyền.
+Nếu trong khoang thời gian đó có người khác gửi => xung đột.
+Điều kiện chắc chắn truyền thành công, trong ktg 2ts, k được có người khác cũng truyền tin vào
+Mô tả:
+-----t0-ts (1) ---- t0 (2) ------ t0+ts (3) -----
+Thời điểm gói tin 1 ở vị trí 3, gói tin 2 mới dược phép phát xong ở vị trí 1 kéo dài đén vị trí 2
+
+Đồ thị đánh giá aloha: trục ngang là tổng lưu lượng đến do tất cả người sử dụng phát ra. Chuẩn hóa theo tài nguyên của đường truyền là đơn vị nhỏ nhất (nên đơn vị trục ngang là số lần tài nguyen đường truyền). VD: 2 là 2 lần tài nguyen đường truỳen => đồ thị áp dụng với mọi mạng aloha. Chứng minh đồ thị thông qua tiến trình quaxong phân bố ngẫu nhiên. 
+Trục đứng chuẩn hóa theo đơn vị là 10 megabit/s. Trục đứng là phần truyền thành công, khi lưu lượng lớn sẽ đem lại phần truyền thành công ~0 
+
+=> Xung đột cao, giảm xung đột bằng cách đặt điều kiện chỉ được chiếm tài nguyen của đường truyền vào các thời điểm x*ts với x là số nguyên => Slotted aloha với mỗi slot dài ts. 
+
+ts = P/R là kích thước 1 gói tin = tổng lượng tin chia số gói. P k được dài quá và k đươc ngắn quá, điều này ta k kiểm soát dược, nếu k có thể giảm nó xuống min sẽ tránh được xung đột. ts fix
+Cửa số xung đột sẽ giảm xuống còn ts với slotted aloha (chứ kp là 2ts như ban đầu)
+
+Hiệu năng slotted aloha: 10 megabit/s thì phần truyền thành công là 3.6, tốt hơn aloha 1 xíu
+
+-> CSMA (bản thường là có dây)
+1-persistent CSMA: là kiểu bth check rỗi thì gửi
+p-persistent CSMA: cứ đường truyền rỗi thì sinh số ngẫu nhiên để chờ thêm 1 lượng random mới gửi
+non-persistent: cứ đường truyền bận thì chờ 1 lượng random
+
+--> CSMA/CA: dùng trong wifi (tốt hơn 3 TH CSMA trên) (k dây)
+TH bth dùng CSMA thuần với wifi rất k ổn như sau: Mạng k dây, sóng điện từ, tỉ lệ nghịch giữa cường độ và bình phương kc. Nằm ngoài bk vùng phủ sóng k nhận đc và phải forward.
+VĐ nút ẩn: Nếu 2 người cùng gửi cho 1 người cùng trong vùng phủ sóng của 2 người đó -> xử lý xung đột. 
+VĐ nút hiện: K ổn vì B gửi A, C gửi D éo liên quan nhưng bán kính B và C giao nhau làm C tưởng kênh truyền bận vì B đang truyền mà -> k xung đột mà tưởng xung đột. A ngoài vùng của C và D ngoài vùng của B
+
+TH dùng CSMA/CA: i và j cùng trong vùng phủ sóng của nhau. Tại t0, i có dữ liệu và lắng nghe đường truyền rỗi thì chờ random mới truyền. j chờ random 1 lượng DIFS là 3, xuống 2, check đường truyền rỗi thì giữ nguyên 2, đường truyen hết rỗi thì xuống 1, rỗi thì xuống 0, rỗi tiép thì truyền, k rỗi thì lại chờ random 1 lượng DIFS lặp lại. Cả 2 cùng như v.
+
+Các PP truy nhập ngẫu nhiên chỉ có ích khi có tốc độ cao và thích hợp với TCP tin cậy, phù hợp với nh hđh.
+
+Mạng k dây buộc có thêm ACK vì k chắc nhận được k, còn mạng có dây chắc chắn truyền tới nơi nên chỉ cần xử lý xung đột
+RTS: request to send
+CTS: clear to send 
+=> RTS, CTS là để tránh xung đột của 2 trạm cách nhau > bán kính R => 3 hình vẽ
+
+Thg là BSS, truyền qua access point
+
+-> Nhiều phiên bản khác của 802.11 như .a .b (tầng vật lý và tầng liên kết data)
+
+Gói tin -> TCP -> IP -> 802.11 -> đóng vào dây vật lý dải tần 2.4GHz -> truyền
+
+-> Gói tin 802.11 cần địa chỉ MAC(vật lý, card mạng, phần cứng) (48 bit) của các router trung gian mới có address 2 và 3 ở layer 2, các phiên bản trước k có address2 address 3 trong frame. 
+layer 3 có địa chỉ IP version (v4 và v6(ít dùng) - 32 bit chia 2 trường)
+layer 4 có port (trong khuôn dạng TCP UDP có port mà)
+layer 5 có application k còn địa chỉ gì nx
+
+Framecontrol duration address1 address2 address3 seqcontrol address4 payload CRC
+
+-> Wifi có 14 dải tần, mỗi dải tần rộng tới 20MGHz cho tốc độ MB/s rất nhanh, 4G cũng có dải tần rộng. 
+VD: 802.11b có dải tần 2.4GHz
+
+
+
+# Mạng
+GSM là mạng điện thoại di động thiết kế gồm nhiều tế bào(cell) theo kiểu các máy di động kết nối với các mạng bằng cách tìm kiếm các cell gần nó nhất
+
+-> Mạng 2G: PSTN - mạng điện thoại cố định chỉ dùng để gọi điện thoại
+
+--> Sơ đồ cấu trúc logic tổng quan 2G. Có 3 QH:
+1) Vô tuyến: có nhiều loại thiết bị, nó chính là vùng 1
+Vùng 1 là BSS: [Máy điện thoại cầm tay --- BTS(anten thu phát) --- TRAU --- BSC(trạm thu phát vô tuyến) --- ()] => BSC là thứ nối tiếp ra ngoài vùng 1
+TRAU ở đây là để chuyển đổi thành tốc độ 2.048 Mega bit/s, có vc chuyển đổi này thì mói nối được về phân hệ chuyển mạch NSS (vùng 2). Vì BTS và BSC nhận nhiều tín hiệu 16bit/s 
+Còn có BS làm éo gì bên trong nx ấy
+
+Vùng 2 là NSS: [() --- MSC(tổng đài điện thoại di động - mobile switching center) --- EC --- () ] => nhiều BSC của các vùng 1 nối vào 1 cục MSC của vùng 2
+Vùng 2 là phần quan trọng của 2G gọi là phân hệ chuyển mạch, nó có MSC nối với nhiều các thành phần bên trong như HLR,... Trong đó có EC kết nối sang vùng 3 là PSTN(public switched telephone network) là mạng điện thoại cố định. 
+Trong 2G 1 phân hệ chuyển mạch, 1 mình con router MSC k đủ, mà phải có EIR, HLR, VLR, AC kết nối vào MSC
+
+Vùng 3: PSTN - mạng điện thoại cố định
+
+2) Chuyển mạch (đang nói về vùng 2)
+
+3) Bảo hành, bảo dưỡng: kqtr
+
+-> Mạng 2.5G: bắt đầu kết nối được internet; GPRS là giao thức kết nối internet cũ trước khi mạng 3G ra đời, được dùng trong 2.5G
+Nó là 1 phần của 2G nhưng để 2G kết nối được internet, nó cần thêm 4 thiết bị. Bên trên chỉ connect với PTSN là mạng điện thoại cố định, bh nó kết nối được với PDN (packet data network) là mạng internet global.
+4 thiết bị: SMS - GMSC SMS - IWMSC; SGSN; GGSN; Other GPRS PLMN => 4 packet cung chức năng general packet radio services giúp kết nối ra global internet.
+=> Nó vẫn có đầy đủ các thiết bị của 2G để connect với PSTN như cũ nhưng có thêm các thiết bị connect sang PDN mà thôi.
+
+Các hãng khác nhau sử dụng các kiểu MSC khác nhau nhưng phải tuân theo 1 chuẩn chung để có thể connect với mọi BS, BSS từ phía người dùng.
+
+-> Mạng 3G: 
+2G và 2.5G đều dùng FDMA và TDMA, riêng 3G dùng FDMA + CDMA
+3G tương tự nhưng BTS và BS được gọi chung là NodeB
+
+3G có 1 phân hệ vô tuyến riêng gọi là NodeB cho phép kết nối với smartphone hỗ trợ 3G (gọi là UE trong smartphone)
+
+UE --- Radio Access Network[ --- Node B --- RNC ---] --- Core Network[ --- GGSN --- SGSN --- ] --- Internet
+                                                                     [ --- MSC --- GMSC ---  ] --- PSTN
+=> Tức 3G vẫn connect được vào mạng điện thoại cố định để connect với các thiết bị 2G, 2.5G. Các thiết bị cũ đó vẫn có bộ phân hệ vô tuyến cũ có MSC, TVLR, GMSC --- PSTN --- 3G
+Cùng vị trí các node B sẽ có 1 cái cột anten lớn thu phát tín hiệu
+
+Dải tần 3G có uplink, downlink
+
+-> SS tốc độ
+2G có 200KHz chia 8 dải tần rất chậm
+3G khác là dùng 1 dải tần 5MHz lớn cho nhiều người dùng chung, chỉ là thuật toán khác đi. 
+
+=> Ref ảnh: Spread và de-spread là có 3 đường truyền
+U1xC1
+...
+UnxCn
+=> Sigma(UixCi) => phép nhân và cộng signal là trong hệ binary
+Giá trị trên đường truyền nhân với giá trị trong encoder là ra mã truyền đi và tới đích là thành tín hiệu. Mã truyền đi đó đối xứng là nhờ thuật toán của nó.
+De-spread làm ngược lại từ tín hiệu ra mã
+
+
+
+# Bài tập
+-> Package switching: refer tới "Tài liệu Internetworking"
+
+
+
+# Router
+Router có nhiều cổng input và output
+
+
 
