@@ -154,6 +154,27 @@ De-spread làm ngược lại từ tín hiệu ra mã
 # Bài tập
 -> Package switching: refer tới "Tài liệu Internetworking"
 
+-> Phân biệt TDMA, CDMA, FDMA
+TDMA: Time Division Multiple Access chia dải tần theo thời gian; K cần code word; Cần synchronize về mặt thời gian; Thích hợp cả 2 loại signal; data rate is medium
+FDMA: Chia theo tần số; K cần code word; Data rate is slow; Dùng continuous signal; K flexible; k cần synchronize; Nếu k có dữ liệu để truyền sẽ bỏ trống;
+CDMA: Mọi người dùng chung 1 dải tần lớn luôn; K cần synchronize; data rate is high; digital signal; Highly flexible; Cần code word; Rẻ hơn 2 kiểu trước
+
+Mô hình CDMA:
+CDMA: 
+U1 x C1
+U2 x C2
+...
+Un x Cn 
+   v
+Sigma(UixCi)
+   v
+Dùng thuật toán trung gian
+   v
+C1 -> U1
+C2 -> U2
+....
+Cn -> Un
+
 
 
 # Router
