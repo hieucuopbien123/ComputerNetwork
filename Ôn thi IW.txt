@@ -187,3 +187,19 @@ Applications:
 3.5G - Advanced internet applications like video streaming and mobile TV
 
 In summary, each generation of mobile technology has introduced new features and improvements over the previous one. From basic voice communication and text messaging in 2G to high-speed mobile internet connectivity and advanced applications in 3.5G, the advancements have allowed for more efficient and sophisticated communication and information exchange.
+
+Dải tần của 2G chia thành uplink và downlink
+RFC: radio frequency channel có dải tần 200KHz. Trên dải tần đó người ta chia thành 8 khe thời gian dành cho 8 mobile station (8TS - 8MS)
+Cấp phát 124 RFC cho các tế bào như thế nào => đó là bài toán tô màu bản đồ để quy hoạch vùng phủ sóng. Bất kỳ bản đồ nào chia ra các vùng khác nhau thì chỉ cần 4 màu là đủ, sao cho 2 ô cạnh nhau k có cùng màu
+=> Bài toán quy hoạch vùng phủ sóng.
+Các cell cạnh nhau k được cấp các nhóm RFC gần nhau. Các RFC gần nhau VD 1,2,3 (có 124 RFC) mà cấp cho các tế bào cạnh nhau sẽ bị nhiễu xạ giao thoa => cấp càng xa càng tốt => Do số lượng RFC cấp cho 1 tế bào phụ thuộc vào mật độ tập trung thuê bao
+2G bị giao thoa nhiễu xạ sẽ nghe thấy tiếng người khác trên điện thoại khi gọi
+=> Nhóm các tế bào thành cụm (3/9, 4/12, 7/21)
+-> 30 RFC cấp cho cụm 3/9 như thế nào (i:= 1-30)
+
+1 frequency chia thành nhiều channel. 
+Mỗi cell được gán 1 set channel tổ hợp khác nhau thì network có thể tái sử dụng cùng các frequency channel ở nhiều cell khác nhau để tăng capacity of network mà k cần tạo ra các channel mới. Mỗi frequency lại có nhiều channel:
+VD: 
+Cell 1: ABCD
+Cell 2: BCDA
+
