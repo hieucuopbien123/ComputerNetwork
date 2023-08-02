@@ -1,0 +1,205 @@
+Chương 1:
+Nguồn gốc internet từ cái thằng ARPA ấy
+Các loại topology của mạng: vd mạng vòng ring chỉ trao đổi dữ liệu theo 1 chiều
+WAN > MAN > LAN > MAN
+OSI TCP/IP
+
+Nhanh OSI:
+app: tương tác app
+presentation: ASCII <-> 01010
+session: thiết lập kết nối
+transport: TCP UDP
+network: gắn IP address
+datalink: gắn MAC, phân chia từng frame
+physical: biến frame 0101 <-> sóng
+
+Nhanh TCP/IP: 
+App
+Host to host: TCP UDP
+Internet: gắn IP address
+Network Access layer: LLC - MAC - PHY => thì cái LLC điều khiên luồng, MAC gắn địa chỉ MAC vào. 
+
+Lớp MAC còn có vai trò qtr nx là: VD 10 máy dùng chung 1 dây vật lý thì lớp MAC chơi media access control protocol cản conflict. Nó phải đảm bảo hiệu suất cao nhất và chia sẻ tài nguyên công bằng giữa các thiết bị truy nhập bằng hàng loạt cơ chế ở chương 2
+
+PDU SDU: protocol data unit là nhận về và gỡ ra thành service data unit
+Service access point
+
+Chuyển mạch kênh, chuyển mạch gói
+L l C tp ts de2e
+Cái chuyển mạch gói có tính toán 1 chút vì nó chia gói và gửi đi. Ta coi từng tầng là 1 kênh truyền giữa 2 endpoint VD a gửi C1, C1 gửi C2, C2 gửi b. Đến cuối cái de2e là thời gian từ khi a gửi đi cái đầu cho đến khi nhận được cái gói tin đó ở đầu thu b
+
+
+Chương 2:
+Lớp MAC trong data link layer của Network Access Layer được merge vào TCP/IP lo phần xử lý dùng chung đường truyền:
+-> Hướng liên kết: ghép kênh, đa truy nhập
+-> Không liên kết: đa truy nhập
+
+Đa truy nhập có:
+-> Tập trung -> Hỏi vòng -> Roll Call Polling
+                         -> Hub Polling
+
+-> Phân tán -> Dành sẵn kênh truyền -> Token Ring -> Thẻ bài đơn
+                                                  -> Đa thẻ bài
+                                    -> Token Bus
+            -> Truy cập ngẫu nhiên -> ALOHA
+                                   -> Slotted ALOHA
+                                   -> CSMA: 1|p|non persistent CSMA
+                                   -> CSMA/CA (802.11 - wireless)
+                                   -> CSMA/CD
+
+Hỏi vòng: trạm center gửi poll command lần lượt, trạm con nào nhận được sẽ được phép truyền data. Vc truyền đều phải qua trạm trung tâm 
+
+Token Ring: xoay vòng chỉ truyền 1 chiều
+Thẻ bài đơn: A gửi và nhận lại kết quả mới thả thẻ bài ra, chỉ có 1 thẻ nên phí
+Đa thẻ baì: A gửi hết gói là nhả thẻ bài, bất kể đích đến nhận hay không. Vẫn chỉ 1 thẻ nhưng có thể nhiều người được gửi hơn cùng lúc
+
+Truy cập ngẫu nhiên k cần phối hợp các trạm thành mạng mẹ gì, cứ gửi random khi có data thôi
+
+ALOHA: có là gửi, tx = 2ts 
+Slotted ALOHA: có thì căn vào đúng sloted time là gửi, tx = ts
+=> Nó đang kiểu giảm lượng va đập nhất có thể
+CSMA 1 persistent: chờ hết bận là gửi -> va đập khi 2 người cùng thấy rỗi rồi cùng gửi 
+CSMA p persistent: rỗi thì truy nhập vói xs p, bận thì chờ 1 mini slot rồi lại truy nhập với xs p
+CSMA non persistent: rồi thì truy nhập luôn, bận thì chờ 1 lượng random mini slot rồi truy cập => k khá hơn cái trc là mấy
+CSMA CD: y hệt non persistent nhưng chờ 1 tg random chứ k theo minislot -> có thêm cơ chế phát hiện va đập: các trạm dừng truyền gói bằng cách gửi đi PURGE để báo hiệu, rồi chờ backoff random time rồi gửi tiếp
+
+Mạng k dây:
+VĐ nút ẩn: cái mạng k dây bố láo vì mỗi thiết bị có 1 bán kính và chỉ gửi khi thiết bị đích nằm trong bán kính đó.
+A gửi B mà k biết rằng C cũng đang gửi B vì C nằm ngoài vùng phủ sóng của A, đó là nút ẩn vì C bị ẩn so với A
+VĐ nút hiện: cái mạng k dây bố láo vì nó k biết đc cụ thể ai đang là người bận. 
+A và B và D nằm trong vùng phủ sóng của C. A gửi data cho B thì C cũng thấy kênh truyền bận nên k dám gửi cho D vì nó kb ai là người bận mà chỉ biết có người đang bận nên k dám gửi, đó là nút hiện vì A B D đều hiện hữu so với C
+
+CSMA CA -> cơ chế slide 2 nói rất rõ. Bận hay rỗi đều chờ DIFS
+2 ý là: tránh va đập với RTS và CTS; Chờ 1 lượng DIFS và random tBO mini slot giảm về 0
+
+
+Chương 3:
+Miền quảng bá là miền mà các nút gửi tin vào miền này sẽ gửi cho tất cả mọi người trong miền
+
+Kết nối mạng ở lớp MAC: nối nhiều mạng LAN lại với nhau thông qua các thiết bị
+Lớp vật lý: Hub
+Lớp MAC(trong datalink): Bridge, Switch
+Lớp mạng: Router
+
+Hub: khuếch đại tín hiệu, repeater
+Switch: kết nối nhiều mạng LAN có công nghệ khác nhau(ethernet, token ring), phân mảnh 1 mạng LAN thành nhiều miền quảng bá và làm trung tâm connect các mạng nhỏ đó(vc chia như v sẽ tăng hiệu suất)
+
+Với bridge thông thường, địa chỉ MAC gửi lên là dạng phẳng k cấu trúc, nên k thể định tuyến được bằng địa chỉ MAC khi gửi khung MAC lên. Tuy nhiên h người ta dùng bridge chuẩn IEEE 802.1d
+No-frill bridge: nhận data 1 cổng thì gửi đến các cổng còn lại(gửi đến mọi mạng LAN kết nối với bridge đó) 
+Learning bridge: lọc gói. Nó lưu trữ vị trí của máy gửi tin vào 1 forwarding table dạng:
+[địa chỉ MAC, số cổng tương ứng, livetime] => từ đó nhận vào 1 frame mà thấy trong bảng có thể gửi đúng cổng luôn, k thì gửi ra mọi cổng => chỉ dùng khi topology của switch k có vòng lặp, VD 3 cái switch tạo vòng lặp thì hỏng
+=> Để tránh vòng lặp, dùng giao thức STP xây ra 1 spanning tree trên lớp LLC:
+
+Chương 4:
+Lớp MAC giúp kết nối nhiều mạng LAN với nhau thông qua thiết bị như switch dùng STP ở chương trước. Nhưng k thể cứ thế nối mãi ra toàn thế giới được. Dù khả thi nhưng sẽ k có định tuyến và cây spanning tree rất lớn với quãng đường dài. Bên cạnh đó các mạng vật lý có cấu trúc khác nhau nên cách đánh địa chỉ cực kỳ phức tạp. Do đó mới có lớp IP lo riêng kết nối mạng internet. Mọi kiểu mạng đều cung ra chung router để xử lý là được.
+
+Địa chỉ IP -> Có phân lớp -> ABCDE
+           -> K phân lớp -> subnetting: dùng subnet mask
+                         -> supernetting: quy tắc longest prefix match
+
+MAC và IP: 
+A muốn gửi tin cho B thì phải biết IP của B để biết đến mạng nào xong phải biết MAC của B để biết là đến máy nào. Lúc gửi tin, lớp MAC sẽ đóng vào MAC frame phải có cả ip và mac của cả A và B. Nhưng A kb MAC của B sẽ quảng bá tin ARP request kèm IP máy B. Các trạm nhận được sẽ trả ARP reply tới A, cập nhập bảng ARP lưu MAC máy B r tiếp tục qtr gửi bth
+
+DNS server: gửi DNS query đến DNS server gần nhất, k có thì chuyển tiếp lên DNS server cấp cao hơn, nhận về thì ứng dụng lưu IP trong cache
+
+NAT: ánh xạ private ra public
+Static NAT: ánh xạ 1-1, nếu dải NAT IP cấp phát hết, các kết nối k thể ra ngoài được nx
+NPAT tương tự nhưng dùng thêm 1 port rảnh nào đó: nhiều connect ra ngoài thì dùng chung ip với port khác nhau, tiết kiệm số lượng địa chỉ IP. Router nhận về NAT-IP, convert thành private IP và chạy vào đúng ứng dụng
+
+IP
+Các trương trong IP Header
+Phân mảnh gói tin
+ICMP
+Routing table
+Định tuyến - giao thức SPT - Bellmanford / Dijistra
+Hẹ tự trị - IGP - RIP 
+                - OSPF
+          - EGP - BGP
+Tìm bản ghi trong routing table - Longest matching - Binray Tree
+
+2G:
+GSM
+Phân hệ: NSS, RSS, OMS
+Cấu trúc mạng
+MS = ME + SIM
+SIM có IMSI, MSISDN, TMSI
+VLR: nơi chứa thông tin đk của người dùng
+Đổi từ w sang dBm => 10*log10(P*1000) => truyền vào P đơn vị W
+Điều khiển công suất
+Trạm BSS
+
+
+
+
+
+
+
+2G (Second Generation) - 2G technology provided digital voice communication and allowed for basic text messaging. It offered data transfer speeds of up to 64 kbps.
+
+2.5G (Second and a half Generation) - 2.5G technology improved on 2G by introducing features like multimedia messaging and basic internet connectivity. It offered data transfer speeds of up to 144 kbps.
+
+3G (Third Generation) - 3G technology provided high-speed mobile internet connectivity, video calling, and improved multimedia features. It offered data transfer speeds of up to 2 Mbps.
+
+3.5G (Third and a half Generation) - 3.5G technology improved on 3G by providing even higher data transfer speeds of up to 14.4 Mbps, allowing for more advanced internet applications like video streaming and mobile TV.
+
+Here is a comparison of the aspects of each technology:
+
+Data transfer speeds:
+2G - up to 64 kbps
+2.5G - up to 144 kbps
+3G - up to 2 Mbps
+3.5G - up to 14.4 Mbps
+
+Multimedia features:
+2G - Basic text messaging and voice communication
+2.5G - Multimedia messaging, basic internet connectivity
+3G - High-speed mobile internet connectivity, video calling, improved multimedia features
+3.5G - Advanced internet applications like video streaming and mobile TV
+
+Network architecture:
+2G - Circuit-switched network architecture
+2.5G - Packet-switched network architecture
+3G - Packet-switched network architecture
+3.5G - Packet-switched network architecture
+
+Frequency bands:
+2G - 900 MHz and 1800 MHz
+2.5G - 850 MHz, 900 MHz, 1800 MHz, and 1900 MHz
+3G - 850 MHz, 900 MHz, 1700/2100 MHz, 1900 MHz, and 2100 MHz
+3.5G - 850 MHz, 900 MHz, 1700/2100 MHz, 1900 MHz, and 2100 MHz
+
+Voice quality:
+2G - Good quality voice calls
+2.5G - Good quality voice calls
+3G - Improved voice quality and clarity
+3.5G - Improved voice quality and clarity
+
+Security:
+2G - Basic security features
+2.5G - Enhanced security features
+3G - Enhanced security features
+3.5G - Enhanced security features
+
+Applications:
+2G - Basic applications like voice calls and text messaging
+2.5G - Multimedia messaging, basic internet connectivity
+3G - High-speed mobile internet connectivity, video calling, improved multimedia features
+3.5G - Advanced internet applications like video streaming and mobile TV
+
+In summary, each generation of mobile technology has introduced new features and improvements over the previous one. From basic voice communication and text messaging in 2G to high-speed mobile internet connectivity and advanced applications in 3.5G, the advancements have allowed for more efficient and sophisticated communication and information exchange.
+
+Dải tần của 2G chia thành uplink và downlink
+RFC: radio frequency channel có dải tần 200KHz. Trên dải tần đó người ta chia thành 8 khe thời gian dành cho 8 mobile station (8TS - 8MS)
+Cấp phát 124 RFC cho các tế bào như thế nào => đó là bài toán tô màu bản đồ để quy hoạch vùng phủ sóng. Bất kỳ bản đồ nào chia ra các vùng khác nhau thì chỉ cần 4 màu là đủ, sao cho 2 ô cạnh nhau k có cùng màu
+=> Bài toán quy hoạch vùng phủ sóng.
+Các cell cạnh nhau k được cấp các nhóm RFC gần nhau. Các RFC gần nhau VD 1,2,3 (có 124 RFC) mà cấp cho các tế bào cạnh nhau sẽ bị nhiễu xạ giao thoa => cấp càng xa càng tốt => Do số lượng RFC cấp cho 1 tế bào phụ thuộc vào mật độ tập trung thuê bao
+2G bị giao thoa nhiễu xạ sẽ nghe thấy tiếng người khác trên điện thoại khi gọi
+=> Nhóm các tế bào thành cụm (3/9, 4/12, 7/21)
+-> 30 RFC cấp cho cụm 3/9 như thế nào (i:= 1-30)
+
+1 frequency chia thành nhiều channel. 
+Mỗi cell được gán 1 set channel tổ hợp khác nhau thì network có thể tái sử dụng cùng các frequency channel ở nhiều cell khác nhau để tăng capacity of network mà k cần tạo ra các channel mới. Mỗi frequency lại có nhiều channel:
+VD: 
+Cell 1: ABCD
+Cell 2: BCDA
+
