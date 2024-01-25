@@ -1,0 +1,786 @@
+Network Software Architecture:
+
+
+
+# Basic
+Internet TV ở VN dùng multicast. Các nhà mạng độc lập k thể multicast tới user lẫn nhau được.
+VD các mạng Viettel, FPT quản lý user ở tầng IP vì họ cung mạng internet cho user, họ multicast tới user theo 1 tree cast từ trên xuống. Còn các mạng như google không thể dùng được multicast như v vì họ chỉ quản lý ở tầng ứng dụng chứ k quản lý IP của user.
+
+-> EGP chỉ có 1 giao thức duy nhất là PGB nên gọi như nhau, nối giữa các AS
+Nối trong 1 AS thì dùng IGP (còn nhiều loại giao thức khác)
+
+BGP:
+Update tự động lan tỏa trong IGP.
+VD prefix 1008 nằm trong AS1, BGP5 của AS5 biết để đi đến 10.0.0.8 phải đi qua các router trung gian. Các router trong AS5 học prefix 10.0.0.8 đơn giản. Tương tự IGP sẽ giúp mọi router trong AS5 update đường đi đến 10.0.0.8.
+Các BGP nối với nhau ở từng ứng dụng socket TCP. 
+
+BPG1 broadcast đường đi đến 10.0.0.8 sang BGP3 và BPG3 bằng message riêng ở tầng ứng dụng. BGP khác biết rằng mọi gọi tin tới 10.0.0.8 sẽ gửi cho BGP1. BGP3 và BGP2 redistribute loan báo vào trong các thiết bị mạng bên trong BGP đó và tiếp tục loan báo láng giềng để tất cả thiết bị nhận được. 
+
+
+
+# Dùng Virtual Box
+Có 2 loại là hệ điều hành ubuntu và ubuntu server. 
+Ubuntu cung cấp GUI, cài đặt sẵn 1 số ứng dụng mặc định của hđh như browser, trình chạy media, phần mềm văn phòng
+Ubuntu Server chỉ cung cấp giao diện CLI, k có sẵn các ứng dụng nên nhẹ hơn, nó phù hợp với các ứng dụng mạng và dùng làm máy chủ.
+Có thể tùy chỉnh MAC Address trong máy ảo vì nó k có thực
+
+-> Dùng Ubuntu Server:
+Cài VirtualBox bản cho window -> Cài "Ubuntu server" được 1 file iso -> tạo 1 server trong máy ảo, server này là 1 cái box rỗng chưa có hđh -> ta cài hđh ubuntu vào server này từ file iso kia 
+
+Sau khi cài VB, 1 kết nối mạng ảo sẽ được tạo ra để kết nối máy host với các máy ảo, mặc định để giúp các máy ảo kết nối ra ngoài internet. Tên của các mạng ảo này thường là "VirtualBox Host-Only Ethernet Adapter".
+Gõ "ipconfig /all" trên window sẽ thấy máy host đang connect với máy ảo qua mạng đó
+
+Gõ "ip a" trên ubuntu sẽ thấy các mạng đang có trong hđh đó. Mặc định gồm 2 mạng là loopback và 1 mạng broadcast khác đang kết nối ra internet được gán 1 địa chỉ ip inet cụ thể là cái mạng trên.
+Phải có mạng kết nối ra internet đó mới vào được internet, VD "ping 8.8.8.8". Khi đó thì inet sẽ thấy có địa chỉ ip cụ thể (mặc định thg là 10.0.2.15). Chú ý nó khác với inet6 là 1 loại địa chỉ ip tự động sinh ra từ địa chỉ MAC, chỉ dùng cho việc connect local qua đường dây nội bộ.
+Card mạng trong máy tính tự động giúp cấp ip inet kết nối ra internet. Nếu ubuntu k có địa chỉ ip kết nối ra ngoài internet, ta phải cấp cho nó với lệnh: sudo dhclient <tên mạng> => VD sudo dhclient enp0s3
+Còn "sudo dhclient -r enp0s3" là lệnh xóa địa chỉ ip của mạng enp0s3, check lại "ip a" sẽ thấy mất địa chỉ inet và k thể ping ra ngoài internet
+
+Mở settings máy ảo -> System -> Motherboard sẽ thấy Boot order là cách mà máy ảo load data hđh về và chạy. Trong đó có floppy disk là đĩa mềm đã k còn sử dụng. Optical và hard disk là đĩa quang và đĩa cứng thì cần chọn.
+Còn có option network là kiểu boot từ mạng. Khi khởi động, máy ảo sẽ dùng giao thức net bios có sẵn trong bios của máy tính để tìm đến server, rồi load hđh từ server này về để boot mà k cần ổ cứng.
+
+-> Dùng terminal: 
+lsb_release -a => check version của ubuntu
+
+-> Kết nối máy ảo trong VB với máy thật
+sudo shutdown => thông báo quit mọi thứ rồi tắt máy ảo
+sudo shutdown now => tắt máy ảo ngay
+
+Vào settings Network -> Thêm card mạng mới (adapter) loại "Host-only adapter" để tạo ra 1 mạng ảo kết nối máy ảo với máy thật
+Thực tế lúc dùng VB, luôn có sẵn 1 mạng Host-Only tồn tại là "VirtualBox Host-Only Ethernet Adapter" mặc định. Mạng này giúp tương tác giữa máy host và máy ảo. Ta có thể tạo ra nhiều mạng host only mới thoải mái hoặc sử dụng cái mặc định.
+Thực tế lúc tạo máy ảo trong VB, mỗi máy ảo luôn có 1 adapter mặc định là loại NAT kết nối từ máy ảo ra mạng internet. Đó là lý do ta tạo máy ảo ubuntu thì luôn ping vào được gg vì nó có sẵn mạng NAT kia rồi.
+
+Ở đây ta làm để tạo ra 1 adapter mới thuộc loại "Host-only adapter", adapter này có thể coi là 1 card mạng giúp kết nối giữa máy host và máy ảo.
+
+Ban đầu: Host ---> Internet
+Tạo máy ảo tự có mạng NAT: Ubuntu Server --> Host --> Internet
+Mạng NAT này không giúp máy ảo ubuntu tương tác với Host, nó chỉ có vai trò giúp máy ảo ubuntu tương tác ra ngoài internet bằng mạng có sẵn từ máy host rồi
+Ta cần tạo 1 mạng "Host-only adapter" nữa để có: Ubuntu Server <--- Host
+Để đạt được mục đích là ta tạo 1 cái web server trên máy ảo ubuntu, rồi mở trình duyệt browser trên máy host mà tương tác được với webserver đó thông qua mạng này (muốn tương tác thì phải chung 1 mạng)
+Sau này ta tạo ra nhiều máy ảo khác, ta vẫn có thể dùng mạng này để connect Host với nhiều máy ảo tương tác với nhau:
+Ubuntu Server1 <___ 
+Ubuntu Server2 <___|__ Host (1 mạng "Host-only adapter")
+Ubuntu Server3 <___|
+
+Enable card mạng đó -> Start lại server -> "ip a" sẽ thấy mạng thứ 2 xuất hiện -> Sau đó ta check địa chỉ ipv4 của 2 máy trong mạng và ping từ máy thật vào máy ảo và ngược lại đều được
+- Nếu mạng đó k có ip inet thì phải cấp cho nó bằng lệnh dhclient như bth
+- Nếu cấp k được là do mạng ta config bị thiếu: Quay lại VB -> Files -> Host Network Manager -> Chỉnh sửa config cho phù hợp 
+Ta có thể sửa config ipv4 cho máy ảo trong mạng, cấu hình DHCP Server cũng phải cùng ip với máy ảo trong mạng vì server chạy trong máy ảo này.
+
+Nếu vẫn k fix được:
+Bắt buộc phải tạo 1 host only network mới -> cd /etc/netplan -> sudo nano <tên file>.yaml -> sửa thêm thành:
+ethernets:
+  enp0s3:
+    dhcp4: true
+  enp0s8:
+    dhcp4: false
+    addresses: [192.168.56.10/24]
+=> Chú ý address phải đúng là trong dải ip bound mà mạng đó có thể cấp (xem trong config). Và address DHCP server phải trùng với address của máy host vì nó chạy trong cùng máy. Address của máy host là mục config "Server Address" mà ta set. Ta set như nào thì khi chạy ipconfig /all trên máy host sẽ thấy ipv4 address là giá trị đó.
+
+--> Nếu ta setup mạng cầu sẽ dễ hơn. Để mặc định là máy ảo và máy host có thể connect được với nhau luôn. 
+Khi đó máy ảo có địa chỉ IP cùng dãy mạng với máy host, nó như 1 thiết bị trên mạng thật và có thể giao tiếp với các thiết bị khác trong mạng local. Ta có thể k cần tạo ra network interface mới mà dùng các mạng có sẵn trong máy vì bên trong máy đã có sẵn nhiều mạng hỗ trợ như v.
+Khác vói Host-Only Adapter chỉ tạo 1 mạng ảo riêng tư giữa máy host và máy ảo. K cho phép máy ảo kết nối với các thiết bị khác trong mạng local. 
+
+Cài thêm ứng dụng trong ubuntu server: 
+sudo apt-get remove apache2
+sudo apt-get install apache2 
+Nó cài apache 2 và tự động chạy luôn, check bằng "ps -ef | grep apache"
+
+Nếu apache đang chạy server trên máy ảo -> Vào browser của máy host -> http://<ip của máy ảo> sẽ thấy trang chủ apache vì apache tự động chạy cổng 80 của 1 máy là mặc định bắt mọi request tới server đó. Nên ta ping trực tiếp từ host qua máy ảo sẽ tự bắt cổng 80 và chạy vô máy chủ apache
+
+Dùng tcpdump có sẵn trên linux để bắt gói tin đến server đó:
+sudo tcpdump -n -vv -i enp0s8 | grep TCP
+=> Chạy lệnh này rồi ping từ host với máy ảo sẽ thấy gói tin 
+
+-> Sau khi có server trong máy ảo, ta coi nó là 1 server remote đi, ta có thể connect SSH tới nó từ máy host với:
+ssh username@ip_address
+Tức ở đây chạy "hieu@192.168.74.4" chẳng hạn xong nhập mk như bth là vào được terminal của server
+=> Đây là công cụ ssh có sẵn của window. Với window phiên bản cũ, ta phải cài Putty mới được
+
+-> Cuối cùng có 1 internet gateway:
+Internet gateway |Máy thật __ NAT switch| __ Các ứng dụng connect ra ngoài internet
+                 |         __ Host only | __ Các ứng dụng liên kết host only 
+=> NAT Switch là công nghệ cho phép nhiều thiết bị trong 1 mạng LAN sử dụng cùng 1 địa chỉ IP public (tiết kiệm địa chỉ IP). 
+Nó cũng sử dụng trong môi trường ảo hóa cho phép các máy ảo connect ra internet bên ngoài. Khi tạo VM, NAT Switch được tạo tự động. Mạng đó là mạng ảo k phải mạng vật lý tạo ra nhưng có ích dùng trong hệ điều hành.
+Trong settings network có 3 loại mạng chính: NAT - Máy ảo sẽ chia sẻ địa chỉ IP của máy chủ vật lý. Đây là tùy chọn mặc định và khi chọn tùy chọn này, một NAT Switch sẽ được tạo; Bridged - Máy ảo sẽ được cấp một địa chỉ IP riêng biệt trên cùng mạng với máy chủ vật lý (giống NAT nhưng k chung IP public thôi); Host-only - Máy ảo chỉ có thể kết nối với máy chủ vật lý, không kết nối với mạng bên ngoài.
+Các thiết bị Gateway vật lý cũng có vai trò như vậy là cho phép các thiết bị trong gia đình connect ra mạng bên ngoài
+
+Khi vào tab network trong VB, dù không thấy mạng NAT nào được liệt kê trong phần "NAT Networks" của VirtualBox, thực ramáy ảo vẫn có thể kết nối với mạng thông qua chế độ NAT mặc định và mạng mặc định đó k thể chỉnh sửa nên k liệt kê ra thôi.
+Điều thú vị là khi cài đặt một máy ảo mới và chọn chế độ kết nối mạng là NAT, VirtualBox sẽ tự động tạo một NAT Switch riêng lẻ cho máy ảo đó. Mỗi máy ảo sẽ có một NAT Switch riêng, cho phép nó kết nối với mạng bên ngoài thông qua máy chủ vật lý.
+Phần "NAT Networks" trong cài đặt VirtualBox cx cho phép ta tạo một mạng NAT chung mà nhiều máy ảo có thể sử dụng. Điều này khác với chế độ NAT mặc định.
+Vd khi ta tạo ra 2 máy ảo trong VM, mặc định đã có:
+Internet __ Máy host __ NATSwitch1 _ Máy ảo 1
+                     __ NATSwitch2 _ Máy ảo 2
+VD ta có thẻ tạo kiểu: Mạng LAN1[Máy ảo 1 __ Switch01] __ Router __ Mạng LAN2[Switch02 __ Máy ảo 2]
+Vói các Switch01 Switch02 là các NAT Switch tự tạo trong VM
+
+
+
+# BT mô phỏng 1 hệ thống mạng trong máy ảo. 
+Internet --Wifi-- InternetGateway [Máy host __ NAT Switch] __ PC1 __ SW01 __ Router __ SW02 __ PC2 
+                                            __ Host only   __/
+Nói là v chứ ta chỉ cần clone cái server thành 3 và coi là có PC1, Router và PC2
+Sau đó setup network chỉ cần nối chúng vào với nhau thôi:
+VD PC2 chỉ cần bỏ tất cả connect host only và nat tới máy host, rồi mở 1 cái là Internal network để nối vào mạng của router 
+(Internal network sẽ chỉ nối được với các mạng local trong máy ảo để connect các máy ảo với nhau)
+Chú ý để tạo 1 internal network mới, chỉ cần tự gõ tên vào nó sẽ tự tạo
+
+VD: PC1 có 1 internal network là SW01, Router có 2 internal network, PC2 gắn với 1 internal network là SW02
+
+Tuy nhiên làm bình thường có thể bị lỗi:
+Để fix, với từng bản clone, ta chọn options "Generate new address MAC". Sau đó Full Clone.
+Enable mọi network rồi mở lên đảm bảo thành công đã. Vào file /etc/netplan/... để chỉnh sửa các ip address static phải khác nhau (dùng ip động dễ toang lắm).
+Sau đó thoát ra chỉnh 1 network thành internal network. 
+VD chọn adapter3 làm internal network thì lấy ra interface đó, cắm thêm địa chỉ ip static vào. VD:
+enp0s9:
+  dhcp4: false
+  addresses: [192.168.1.3/24]
+Chạy sudo netplan apply là xong
+=> Tạo ra 3 máy rồi các máy nào cùng mạng có thẻ ping nhau ok
+
+
+
+# Dùng mininet
+Môi trường giả lập các host/server/router bằng các máy ảo riêng biệt trên VirtualBox đòi hỏi máy host cần có cấu hình mạnh. Máy host yếu thì có thể dùng môi trường mininet để giả lập. Khi đó tất cả host/server/router trong hệ thống sẽ dùng chung một máy ảo chạy mininet. Nói một cách ngắn gọn, toàn bộ hệ thống mạng giả lập (gồm nhiều host/server/router) thực chất được mô phỏng bằng duy nhất một máy chạy mininet. 
+=> Hạn chế của mô hình này là tất cả các host/server/router dùng chung hệ điều hành và như vậy trong một số trường hợp sẽ không khả khi nếu muốn thiết lập riêng các chế độ hoạt động của hệ điều hành cho từng host/server/router.
+
+Thực chất nó chỉ là ứng dụng chạy trên ubuntu server phải cài thêm mà thôi. Vẫn phải dùng VB với Ubuntu Server
+URL ez chi cần làm theo: https://soict.daotao.ai/courses/course-v1:SoICT+IT4152E+2023-1/courseware/615e5a8c64894a7fa6937b7a8cc9955c/976d828b17724704bb2e34c14e4dfff8/?activate_block_id=block-v1%3ASoICT%2BIT4152E%2B2023-1%2Btype%40sequential%2Bblock%40976d828b17724704bb2e34c14e4dfff8
+
+
+
+# Kết nối liên mạng
+Mạng LAN1(Máy A - Router 1 - Máy B) - mạng LAN2(Router 2 - Máy C) -- ... -- mạng LAN20(Router 3 - Máy D)
+VD Máy A muốn gửi tin cho máy D: Tầng 3 của máy A có source address là máy A, destination address là máy D. Nó cố convert sang MAC address của máy D và chuyển xuống tầng 2 nhưng nhận ra máy k trong cùng mạng. Do đó cần forward sang mạng khác thông qua router nên đặt MAC address là MAC address của Router 1
+Router 1 nhận và lặp lại bước trên truyền sang MAC của router 2, cuối cùng đến Router 3 mới thấy Máy D cùng mạng LAN với mình và set MAC address chuẩn là máy D bth.
+Nếu như 2 máy cùng mạng, nó gắn MAC như bth rồi boardcast gói tin đó trong mạng local đó. Các máy nhận sẽ check MAC trùng với mình thì xử lý rồi gửi lại, k thì bỏ qua. Còn k cùng mạng, nó luôn gửi vào địa chỉ gateway (được set cho nó lúc đầu tiên khởi tạo nó)
+
+-> Mạng backbone:
+Thông thường thì kết nối liên mạng phụ thuộc vào liên kết vật lý giữa các mạng nhưng còn được liên kết theo nhu cầu sử dụng nữa.
+Ví dụ mạng local trong công ty và mạng bên ngoài để công ty truy cập vào data ở nước khác có nhu cầu khác nhau, tốc độ và băng thông sử dụng cũng khác nhau. Nếu ta set chúng đều bằng nhau sẽ gây ra vấn đề chỗ cần nhiều thì thiếu băng thông, chỗ cần ít thì thừa.
+Mạng backbone là mạng xương sống là phần quan trọng nhất của mạng thường được xây bằng đường truyền tốc độ cao, có khả năng chịu tải lớn. Các trạm sẽ kết nối vào mạng đó để truy cập tài nguyen mạng và dịch vụ
+
+Hiện nay mỗi nhà mạng đều có 1 hệ thống mạng backbone riêng. VD FPT có mạng backbone là cáp quang dưới nước ra quốc tế hay mạng backbone trên đất liền nối giữa các tỉnh thành trong nước. Sau đó các thiết bị phải kết nối vào để sử dụng tài nguyên mạng. 
+Bên dưới có rất nhiều hệ thống mạng backbone nhỏ hơn được custom riêng của các doanh nghiệp hay các hệ thống mạng bình thường do các thiết bị điện tử connect vào. Tức các doanh nghiệp cũng có thể tự tạo 1 mạng backbone riêng để liên kết tốc độ cao giữa nhiều nơi.
+
+Người sử dụng internet bth được kết nối thông qua ISP là đơn vị trung gian. ISP này kết nối với Internet backbone(tier 1, 2, or 3) và kết nối tới người sử dụng thông qua router. Router đó chính là thiết bị mà ISP cung cấp để các thiết bị khác sử dụng mạng kết nối vào.
+
+-> Phân tích hình 2 (ảnh)
+Mạng backbone là 3 router R1,R2,R3,R4 tạo thành mạng vòng kết nối các bộ phận bên trong với nhau. R5 và R6 là để connect các thiết bị trong tổ chức ra ngoài internet. R7 R8 là 2 router giúp kết nối với các thiết bị ở xa thông qua 1 mạng WAN. Còn lại bên dưới là các mạng business có các trạm làm việc, bên trái là các router kết nối với hệ thống máy chủ
+Trạm làm việc là các thiết bị dùng mạng bth.
+
+192.168.4.0 => địa chỉ của mạng to
+192.168.4.255 => địa chỉ broadcast tới mọi thiết bị trong mạng
+192.168.4.4 => địa chỉ của thiết bị bất kỳ trong mạng. Kể cả router, gateway trong mạng cũng là 1 địa chỉ cụ thể. Nó ghi 192.168.4.0 chỉ là để bảo địa chỉ cả mạng đó thôi. Các router cũng có router con với quy tắc tương tự
+
+Thường thì trong 1 mạng, router chính là gateway
+Khi cấu hình mạng cho 1 máy trạm, bao giờ cũng phải setup 2 loại địa chỉ IP. 1 là ip của chính nó, 2 là ip gateway. Nếu 1 máy k được cấu hình ip gateway, máy đó sẽ chỉ dùng được trong mạng nội bộ. Tùy vào 2 máy liên lạc có cùng mạng với nhau hay không mà dùng MAC nội bộ hay dùng gateway để ra ngoài
+
+-> Thuật toán routing thực tế:
+Các router ở từng bước chỉ cần biết next hop, k cần tính toàn bộ con đường để đến đích
+
+2 router trong cùng 1 đám mấy sử dụng IGP để truyền gói tin. 2 router ở khác đám mây hay ở rìa sẽ dùng PGP để truyền gói tin. Đó chỉ là 2 thuật toán truyền thôi.
+Thực tế nếu router 1 cần truyền tin cho router 2 ở cùng 1 mạng LAN trong cùng 1 đám mây, nó cũng boardcast cho tất cả các máy trong mạng LAN đó như bth. Tức nó cũng gán MAC address vào gói tin ở tầng 2 tiếp như v. Còn nếu khác thì như bth, sẽ truyền router 1 đến router 2 theo thuật toán với routing table
+=> Cơ chế đồng nhất như nhau khi truyền gói tin qua nhiều thiết bị
+
+--> Routing table:
+VD bảng routing table của R1:
+Network #1 | Router R2
+Network #2 | Router R2
+Network #3 | direct
+Network #4 | Router R3
+
+Lệnh linux "route -n" hiển thị routing table của máy hiện tại gồm destinationip và gateway. Trong đó có 1 destinationip là 0.0.0.0, nếu gói tin tới 1 ip k có trong routing table sẽ gửi tới 0.0.0.0 thông qua gateway tương ứng được setup.
+
+
+
+
+# BT thực hành static routing
+Vấn đề: Tạo hệ thống mạng: Máy A - Máy C - Máy B => Máy A ping tới máy B đang rất bth
+Khi máy B đổi ip từ class thành classless, máy A và B k thẻ ping được cho nhau nữa. Debug bằng iptables của linux. iptables là 1 công cụ được cài đặt sẵn trong kernel của linux để xử lý gói tin theo dòng (chain) đi vào card mạng #1, đi ra card mạng #2. 
+Quá trình 1 gói tin gửi qua mạng được xử lý trong linux trải qua 3 chain: INPUT  OUTPUT, PREROUTING  FORWARD, POSTROUTING và đi qua 3 bảng như trong slide.
+Có 3 table là filter, nat, mangle. Các rule được khai báo theo các table để áp dụng xử lý gói tin theo các chain. VD có 1 rule áp dụng ở filter table trong dòng FORWARD là cấm gói tin ICMP đi qua. Dựa vào các rule, ta có thể custom quá trình gửi gói tin trong linux.
+
+Vấn đề: ICMP là gói tin gửi trong mạng nội bộ, nên trong linux có 1 rule là cấm gửi gói tin có ICMP ra ngoài mạng lớn. Khi config 1 máy thành router, ta cần disable rule này thì mới ping được giữa các máy. 
+Vd ở TH trên sau khi setup xong, ta đổi ip của máy B từ classless thành class. Xong bật service iptables trên máy C => máy A và B k thể ping cho nhau nữa. Vì máy A ping B sẽ đi qua C mà C có rule cản ICMP. Để fix, ta phải dùng lệnh xóa bỏ rule ở máy C để cho phép gói tin ICMP đi qua => thế là lại ping được
+
+Các lệnh:
+service iptables start => bật dùng service iptables của linux để debug
+iptables -L -line-number => liệt kê các rules 
+iptables -D FORWARD 2 => xóa rule ở vị trí 2 trong chain FORWARD
+service iptables restart => restart là mọi rule lại về như cũ, phải tắt luật ICMP tiếp để máy khác ping được vào máy này. Nếu không, máy khác ping vào có ICMP sẽ báo host unreachable
+ipconfig eth2 192.168.3.1/24 => set ip cho máy này trong mạng eth2 là 192.168.3.1/24
+sudo ifconfig enp0s3 down/up => khi apply network config xong phải down hoặc up lại
+
+-> Thực hành:
+Địa chỉ MAC được cấu hình trong VB, xem được với lệnh ipconfig -a
+
+Máy Router R1 dùng 2 card mạng: 
+Connect ra internet là NAT Adapter1 trong VB. Đặt ip là 10.0.2.15
+Adapter 2 là router connect với mạng local. Địa chỉ mạng internal của R1 là 192.168.1.1
+R1 VB __ interface terminal 192.168.1.1 __ card mạng LAN1 trong VB
+
+Máy PC A:
+Adapter 1 là internal network connect vào mạng local. Cấu hình card mạng trùng LAN1 + ip addresss đổi qua 
+Adapter 4 để là host only để ping từ máy thật vào (cái này k tính trong sơ đồ, chỉ là để máy thật ssh vào thôi)
+
+=> PCA sẽ ping được R1. 
+
+--> PCA ping ra internet cần default gateway, mặc định cần là R1
+router -n => show list default gateway
+Để thêm default gateway là R1: router add default gw 192.168.1.1 => Xh 0.0.0.0 là gateway 192.168.1.1
+PCA ping ra internet sẽ đi đến và dừng ở R1 vì R1 chưa cấu hình chế độ NAT cho các thiết bị gọi tới được đi qua và ra ngoài internet:
+sudo tcpdump -i enp0s8 -vn => lệnh giống wireshark để capture gói tin ở 1 mạng VD mạng LAN1
+
+Test thử sẽ thấy các gói tin chạy:
+PCA ping internet, R1 tcpdump bắt ping LAN
+R1 ping internet, R1 tcmpdump bắt ping internet
+
+NN k chạy được là do R1 đang là server, cần cấu hình thành router để forward gói tin => flow phải rẽ nhánh. 
+Xem cấu hình: sudo sysctl net.ipv4.ip_forward
+= 0 là đang tắt
+Set cấu hình: sudo sysctl -w net.ipv4.ip_forward=1
+
+Forward thành công nhưng PC lại k nhận reply vì private ip của PCA thì gg 8.8.8.8 kb phải gửi đi đâu
+Cần cấu hình bật cơ chế NAT để PCA -> R1 sẽ gửi đi với ip public
+Bật luật:
+iptables -L
+sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+=> PCA -> R1 -> 8.8.8.8 -> R1 -> PCA => vì cơ chế NAT bên trong lại cho phép R1 về tiếp PCA
+
+--> Lệnh tracepath 
+Máy A: tracepath -n 8.8.8.8 => vì Máy A khi gặp 1 IP k có trong routing table sẽ luôn gửi về default gateway nên PCA -> R1 -> R2 -> ... -> Máy X (nếu ping tới máy X)
+
+Cấu hình R2: 
+Set default gateway là R1 
+Internal Network LAN1 và LAN2, sửa MAC
+LAN1 là 192.168.1.0/24 => chỉnh LAN trong phần Name của Adapter
+
+Cấu hình default gateway cho R3: 
+sudo ifconfig enp0s3 192.168.2.2/24
+sudo ifconfig enp0s8 192.168.3.1
+sudo route del 192.168.1.0 gw 192.168.2.1 => VD để xóa
+sudo route add -net 192.168.1.0/24 gw 192.168.2.1 => set gw là R1 trong R3 (k cần set default gateway ở đây mà set tĩnh luôn)
+
+Máy R2 lại phải set R2 có ipforward (k cần bật rule MAJQUERADE vì trong mạng LAN k cần gửi ip public qua cơ chế NAT)
+Máy R1 cx phải set cách để đi vào máy R3 để gửi reply về => sudo route add -net 192.168.3.0/24 gw 192.168.1.2
+Máy R1 cx phải set cách đi vào mạng đi vào R2 để từ đó gửi tới R3: sudo route add -net 192.168.2.0/24 gw 192.168.1.2 
+
+VD cấu hình PCA default gw là R2 -> ping 8.8.8.8 -> Ngắt R2 ra internet -> PCA tới R2 tới R1 tới 8.8.8.8 => máy tự nhận ra PCA và R1 cùng 1 mạng nên tự tạo nexthop mới call tới R1 thành ra tracepath ping tới 8.8.8.8 vẫn là ip R1. Máy 2 k ngắt thì vẫn ok
+
+--> Lưu ý:
+Ngáo: 192.16.1.1/24 là địa chỉ máy tức địa chỉ mạng là 192.168.1.0, hiển nhiên mà
+
+Ubuntu server bản version 22 lệnh thay đổi:
+sudo ip addr add {{new_ip_address}}/{{subnet_mask}} dev enp0s8 => đổi address của máy trong mạng
+ip a show enp0s8 => xem ip của máy trong 1 mạng
+ip route show => xem thông tin destination và gateway
+sudo ip route add default via 192.168.1.1 => thêm default gateway
+sudo ip route add 10.0.2.0/24 via 192.168.1.1 => thêm 1 destination với gateway cụ thể
+sudo tcpdump -i any -nn => bắt gói tin tới
+
+--> Chỉ cần hiểu bản chất là:
+Mỗi khi ping tới đâu, ở 1 node bất kỳ chỉ cần biết nexthop là gì mà thôi
+Nếu gateway là 0.0.0.0 thì nó broadcast ngay trong interface local đó. 
+Có mỗi 2 rule, 1 cái dùng public ip, 1 cái dùng cho phép forward, set phát là xong. 
+Các máy bth thì thường chỉ set default gateway để khác mạng thì tới gateway, cùng mạng thì broardcast
+Các máy router thì gửi cho máy cùng mạng sẽ broadcast, khác mạng thì chuyển sang máy khác phải có trong routing table
+Default gateway của mọi máy là máy gần nhất gắn với nó mà nó sẽ gọi để đi ra ngoài mạng internet
+
+Ta thường dùng nhất là sudo tcpdump -i <tên interface> hoặc sudo tcpdump bth để debug gói tin đi tới đâu là bị k đi được nx
+Bug trên VB, đm đặt mạng cùng tên mà nó cứ k connect được. Ta ra ngoài và setting Allow All xong vào lại mấy lần tự dưng được.
+1 máy mặc định nhận gói tin sẽ trả lại mà k cần setting ip_forward. Còn các router cách tốt nhất là luôn setting ip forward tránh lỗi này nọ. Riêng luật MASQUERADE chỉ cái nào ra ngoài internet mới set luật thôi
+Set up đơn giản: 1 là VB set mạng cho chuẩn. Vào trong set ip. Sau đó ping qua ping lại. Set 2 cái rule kia là xong
+
+
+
+# RIP
+Dùng để tự động hóa quá trình setup mạng, k cần làm thủ công set từng máy như bth
+RIPv1 => chỉ dùng với class ip
+RIPv2 => hỗ trợ classless => bh chỉ dùng RIPv2
+
+route -n -> thông số metric đo từ router hiện tại đi đến mạng đích. Giá trị càng thấp thì càng đi ít router càng tốt. Giống kiểu time to live, đi qua 1 router là trừ 1. 
+RIP chỉ cho metric theo cấu hình số lượng router logic. Nó k tính đến kc vật lý và trạng thái đường truyền. VD đi qua nhiều router cáp quang nhanh hơn 1 router cáp đồng nhưng RIP k xét điều đó. Sau có giao thức khác tốt hơn vì RIP k áp dụng trên các phạm vi mạng lớn 
+
+ICMP Router Discovery Protocol là giao thức giúp nhận biết router có phải láng giềng không. Cơ chế nó broadcast để tìm, nếu biết r thì k cần broadcast nx.
+Nếu k có router láng giềng, tìm thông qua multicast, broadcast,....
+RIP: các router tự động setup bằng cách gửi cho các router láng giềng. VD khi gặp prefix là x thì gửi lại cho router hiện tại. Khi router láng giềng gặp gói tin cần gửi tới destination có prefix là x thì gửi lại về router đó, ta k cần setup thủ công nữa
+
+Mô phỏng RIP protocol:
+Mỗi khi 1 máy kết nối vào mạng nào sẽ tự sinh ra 1 dòng route tương ứng vào mạng đó tới gateway 0.0.0.0 -> Máy đó gửi tiếp cho các router láng giềng trong cùng mạng rằng gặp gì thì gửi lại cho nó. Giả sử R1 gửi cho R2. R2 thêm vào bảng routing của nó nếu gửi tới mạng NET1 thì gửi lại cho R1
+[NET1]-R1-[NET2]-R2-[NET3] -R3 _R6... 
+                           -R4 /
+R1 net1 có metric là 0 thì R2 metric net1 là 1 và R3 và R4 metric là 2. Lan tỏa tiếp tới R6....
+=> Nếu bảng routing của 1 router đã có tốt hơn rồi thì nó sẽ k cập nhật. Nó vẫn có thể cập nhật nhưng đường đi dài hơn. Khi nào đoạn đường ngắn hơn bị ngắt sẽ tự động dùng đoạn đường dài hơn.
+
+-> Thực hành dùng RIP protocol (bài thực hành của thầy):
+Cài frr
+sudo systemctl status frr
+VD setup địa chỉ ip trong mạng (Nên cài và setup hết ở 1 máy r mới clone):
+sudo nano /etc/netplan/...
+enp0s10:
+  dhcpv4: false
+  addresses: [192.168.56.12/24]
+sudo netplan apply => Nên dùng netplan thì khởi động lại sẽ k mất, đỡ hơn dùng như bth
+
+Để ssh vào nó:
+ssh hieu@192.168.56.1 => máy phải có mạng host only để ssh vào server
+
+Vd setup 1 đường đỏ nối trực tiếp. Lúc chưa có thì gọi phải đi qua 1 router nx. Khi có đường đỏ sẽ dùng. Nếu đường đỏ đứt thì RIP tự động setup để dùng quay lại đường cũ. VD 30s update 1 lần, tất cả phải tự động
+
+Setup nối vào mạng trong VB. VD R2 có 2 cái internal network nối vào lan01 và lan02 => đó là nối vật lý như nối dây
+VD: 
+enp0s8:
+  dhcp4: false
+  addresses: [192.168.0.1/24]
+  routes: => này là cấu hình default gateway
+    - to: 192.168.2.0/24
+      via: 192.168.1.2 
+VD:
+  routes:
+    - to: default => là cấu hình dùng default gateway
+      via: 192.168.1.2
+
+R2:
+enp0s8:
+  dhcp4: false
+  addresses: [192.168.1.2/24]
+enp0s9:
+  dhcp4: false
+  addresses: [192.168.2.1/24]
+vì R2 nối vào lan1 và lan2 có ip network là 192.168.1.0 và 192.168.2.0
+sudo netplan apply
+ping được vào các máy cùng mạng sau khi setup
+(Chú ý netplan setup địa chỉ cho mạng LAN ok thông qua addresses: [<địa chỉ router này trong mạng]. VD 192.168.1.1 thì mạng là 192.168.1.0 tự động)
+
+Máy PCA chưa ping được vào PCX:
+Bật rip
+sudo nano /etc/frr/daemons
+vào nano bật rip lên: ripd thành yes
+sudo systemctl status frr => để xem rip bật chưa
+Cấu hình RIP:
+sudo vtysh 
+configure
+router rip
+Để cho phép R1 quảng bá thông tin về LAN0, dùng lệnh: network 192.168.0.0/24
+exit
+exit
+show running-config
+write => chốt bật network nào cho RIP
+show ip rip => thấy R1 sẵn sàng quảng bá lan0 và lan1 192.168.0.0 và 192.168.1.1
+
+Cấu hình R2 tương tự:
+...
+router rip
+netowrk 192.168.1.0/24
+exit 
+exit
+
+Để R2 đến net0, phải đi qua R1 với metric là 2. Vì R1 có metric là 1. Nó tự update bảng routing ngay sau khi ta set do R1 setup quảng bá lan0 r
+
+Tương tự: 
+R3 nối vào R2 qua net2: network 192.168.2.0 => tự nhận quảng bá từ R1 -> R2 -> R3
+R3 enable rip trên network 2 nhưng k kết nối được với R2 vì chưa bật network lan2 là 192.168.2.0 ở R2, tức lan tỏa trên network 1 mà chưa lan tỏa trên network 2. Bật lan2 trên network2 là được
+
+Tương tự R3 cần quảng bá mạng 3 để R1 có mạng 3 trong routing table.
+
+Phân tích slide trang 35:
+Console rip là ảnh vùng trên
+Console router -n bên ngoài là ảnh dưới
+
+Có thể bị lỗi là router k cập nhật từ control plan (show ip rip) xuống data plan (router -n)
+Gói tin mà nó trao đổi gọi là RTE => các gói tin trao đổi loại này để tự update routing table theo giao thức RIP với nhau
+
+Để tạo connect trực tiếp được màu đỏ:
+Cho R1 và R3 nối internal network cùng vào 1 mạng mới (tên là serial) 
+Cấu hình IP thông qua netplan là xong
+Tức 2 máy connect được cho nhau thông qua dây vật lý trực tiếp là đường màu đỏ
+
+Chú ý phải luôn set dhcp4: false
+=> Cả 2 máy R3 và R1 đều cấu hình vào enp0s3 ở case này.
+
+Tiếp theo cần đưa đường đỏ này vào hệ thống RIP và routing table. Vì bh ping nó vẫn dùng cái đi qua R2
+Để làm, vào máy R1:
+...
+router rip
+network 192.168.178.0/24
+...
+
+Tương tự máy R3:
+...
+network 192.168.178.0/24
+...
+
+Vd show ip rip ở máy 3 thì R3 đi vào mạng 0 sẽ k cần đi vào R2 nữa mà vào luôn r1 qua dây đỏ ở nexthop là R1
+
+Tạo ngắt kết nối cho dây đỏ để tự động gọi lại như bth
+=> Vào R3 VB, cable connected uncheck (k cần shutdown bật lại, làm trực tiếp luôn)
+Ngay sau khi ngắt kết nối. Vào máy r3, "show ip rip status"
+30s update 1 lần, ta có thể restart chạy ngay: sudo systemctl restart frr
+=> Tự động update lại routing table ngay lập tức là ok
+=> Tức ngay từ đầu, cần luôn check vào cable connected ở các mạng connect vật lý. K check nên mới bị lỗi k ping được lúc trước
+
+Cần chống loop và slip horizons
+VD: 1->2->3->1->... loop vô tận
+
+-> Để ssh vào: 
+Vào host only, chỉ thấy với ifconfig -a
+gán IP
+ssh hieu@<IP của máy trong máy host only>
+
+
+
+# OSPF
+OSPF là bản cải tiến của RIP
+
+IGP là giao thức định tuyến trong 1 AS
+BGP là giao thức định tuyến giữa các AS với nhau 
+
+Trong RIP, mục router rip sẽ show các mạng mà 1 router đang quảng bá
+Mỗi lần chạy network <tên mạng> là lan tỏa thông tin về 1 mạng vào RIP của nó
+
+-> OSPF
+OSPF dựa vào trạng thái đường truyền chứ k chỉ kc như RIP. Lan truyền toàn bộ topo mạng. Dijkstra. Tự chống loop. 
+RIP chỉ biết nexthop trong khi OSPF biết topo toàn bộ mạng
+
+Đơn vị: 10^8/tốc độ => vì thời điểm phát minh, họ đo k có cái nào có tốc độ vượt 10^8 cả
+
+Đồ thị OSPF nối các mạng stub là các mạng chứa các mạng chứa máy làm việc. Đỉnh là mạng or router. Cạnh là tốc độ
+
+Mạng lõi FDDI thường được sử dụng để kết nối các thiết bị mạng chính như máy chủ, router, và các mạng con khác, giúp tạo ra một mạng lõi mạnh mẽ để chia sẻ tài nguyên và quản lý lưu lượng dữ liệu trong một môi trường mạng lớn và phức tạp.
+
+Linked state -> Slide OSPF xung quanh trang 53
+
+Split horizon là 1 pp để tránh lặp lại đường đi trong RIP
+OSPF thì k cần vì mỗi router có 1 db rồi, nó check trong db có Link state advertisement đó rồi thì k cần lan tỏa vào đó nữa.
+
+Advertising router là thằng router kích hoạt đầu tiên. Các router khác chỉ cần forward đi thôi
+Khi 1 router cập nhật lại db ở bát cứ chỗ nào(thêm đường mới, thay đổi cost) thì phải tính toán lại đường đi tất cả các nút lá. Check control plane khác data plain 
+ 
+Data Plan: Router gốc nào cũng có khi được set thủ công 
+Control plan: Cần thêm control plan để các router trao đổi được với nhau. Nó trao đổi và lưu các thứ ở đây, chọn ra đường đi ngắn nhất rồi lại gửi về data plan nếu ngắn hơn data plan rồi thì update vào bảng data plan
+
+Tương tự OSPF cũng có control plan check có ngắn hơn thì update vào data plan như RIP
+RIP chạy trên gói tin UDP. OSPF dùng ngay trong gói tin trong ip header. 
+Mỗi bản ghi LSA có 1 định danh là linked state id (slide 54) duy nhất cho mỗi link state
+
+Sequence number mỗi khi gửi là tăng lên 1 để chỉ định phiên bản, số lần update
+
+OSPF không dùng ICMP, RIP Hello mà sử dụng gói tin riêng của nó. Trong đó có Hello Packets được dùng để thiết lập và duy trì kết nối với router khác.
+
+Bug OSPF: OSPF vẽ nhầm topo khi bus topo lại thành các router nối đôi một với nhau dẫn đến tính toán đường đi bị phức tạp hơn.
+Giải pháp là dùng thêm 1 loại data nữa là Network LSA kqt đến tốc độ đường truyền mà chỉ qt đến việc vẽ đúng dồ thị. Check các router có connect vào cùng 1 mạng trục hay không. Nó chọn 1 router làm nhóm trưởng là designated router và backup router phòng TH thằng kia tắc nghẽn. 
+Network LSA k có trường metric và cost khác với LSA bth. Nó chỉ qt đến các attached router nối với cái network này để vẽ đồ thị cho đúng còn tốc độ các thứ vẫn do thằng router LSA làm. Vậy là có 2 loại network LSA và router LSA.
+
+-> Bài thực hành dùng OSPF thay RIP:
+Setup ip như bth trong netplan
+Setup netplan ip cho hostonly để ssh tới nó được.
+sudo nano /etc/frr/daemon => tắt rip, bật ospf
+
+Cho cấu hình vào ospf tự động giống như RIP: 
+Vào r1: sudo nano /etc/frr/frr.cond -> router ospf chỉnh sửa network nào và comment cái gì lại (giống RIP nhưng ở đây nó cho chỉnh sửa trong file). 
+VD: network 192.168.0.0/24 area 0 => để enable ospf làm việc với router này ở mạng này
+sudo systemctl restart frr
+router -n => là thấy update routing table
+
+sudo vtysh 
+show ip ospf route => xem bản ghi
+[100] là cost là 100 tức bandwidth gốc là 1 Mbps
+
+show ip ospf database => xem các link LSA trong hệ thống. 
+VD router r1 có id là 1.1.1.1 gửi LSA gửi 2 link kết nối (link count) => vd có 3 rows là 3 router gửi 3 LSA cho router này
+Bên dưới là nhóm trưởng là router được bầu ra. Network link state là gì và router nào trong đó làm nhóm trưởng. 
+
+show ip ospf database router => chi tiết hơn về thông tin router.
+(Link ID) Net: 192.168.0.0 => là stub
+R2 nối sang R1 và R3 nên 2 link của R2 là transit network (kp stub). 
+
+show ip ospf database network => chi tiết hơn về network
+network mask là nối Router nào với Router nào. Dựa vào thông tin này ta vẽ lại được đồ thị 
+
+exit
+
+--> Cấu hình đường đỏ: 
+Tạo ra 1 network mới cho cả 2 router connect vào. Chỉnh IP như bth trong netplan, kể cả là 10.0.0.1 hay 10.0.0.2 cũng đổi được thành
+Sau cấu hình nhưng chưa quảng bá vào ospf nên router -n k thấy connect đường đỏ
+
+Để thêm đường đỏ vào ospf, k dùng file frr.cond mà config lệnh trực tiếp như này cũng được:
+sudo vtysh 
+show running-config
+router ospf
+network 10.0.0.0/24 area 2s
+write
+end
+show running-config
+sudo systemctl restart frr
+=> Đã đi qua đường đỏ, check vói router -n
+
+Mặc định máy ảo cho tốc độ 1Mbps nên hiện tại đường đỏ và đường bth có cost bằng nhau. OSPF sẽ chọn ngẫu nhiên. 
+R1->R3 là cost 100 nên chọn random
+R3->R1 cost 200 nên sẽ chọn đường đỏ
+
+Set lại tốc độ. Vào config frr của R1:
+show ip ospf interface để xem tốc độ (nó viết nhầm Kbps thành Mbps)
+configure
+interface enp0s3 
+bandwith ...
+
+Tương tự R3:
+sudo vtysh
+configure 
+inteface enp0s3
+bandwith 64 => tức 64kbps
+end
+
+Bây giờ đường đã đổi khi tốc độ đổi
+show ip route => sẽ thây đường đi đổi
+show ip ospf database => có thêm 1 link state network là đường đỏ và 1 designated router 
+
+Có bao nhiêu network LSA đã được lan truyền đi trong hệ thống: cộng các seq lại là ra vì nó là các phiên bản khác nhau của các link state tham gia hệ thống, đó là số lần các link state được lan truyền trong hệ thống. 
+
+Stub là R3 nối vào network 192.168.3.0
+Bandwidth luôn mặc định 1Mbps
+Sửa thành 100mbps bằng lệnh: bandwidith 100000  => cost thành 1 
+show ip ospf database sẽ thấy router LSA update seq, network lsa k đổi vì nó kqt đến cost mà chỉ giúp xây topology
+
+=> Triển khai backbone lớn sẽ phức tạp hơn chứ k chỉ dùng OSPF như v
+
+-> Một stub network (mạng đường dẫn cuối cùng) là một mạng con được kết nối với mạng lớn hơn thông qua một đường dẫn duy nhất. Điều này có nghĩa là tất cả dữ liệu đi vào hoặc ra khỏi mạng stub phải đi qua đường dẫn này. Một số điểm chính về stub network:
+- Stub network thường không cho phép truyền thông qua (transit traffic) từ mạng khác. Nó chỉ xử lý dữ liệu được gửi đến hoặc từ chính nó.
+- Stub network giúp giảm bớt lưu lượng trên các đường dẫn khác trong mạng lớn hơn, vì dữ liệu chỉ cần đi qua đường dẫn duy nhất đến mạng stub.
+- Trong mô hình OSPF (Open Shortest Path First), một stub network có thể được cấu hình để không nhận các thông tin routing từ các mạng khác, giúp giảm bớt lưu lượng truyền tải và tăng hiệu suất.
+Ví dụ về stub network có thể là một văn phòng nhỏ hoặc một nhà máy sản xuất được kết nối với một mạng lớn hơn của công ty thông qua một đường dẫn duy nhất.
+
+-> Một transit network (mạng truyền thông) là một mạng được sử dụng để kết nối hai hoặc nhiều mạng khác lại với nhau. Nó cung cấp đường dẫn cho dữ liệu để di chuyển từ mạng này sang mạng khác. Một số điểm chính về transit network:
+- Transit network cho phép dữ liệu di chuyển qua lại giữa các mạng khác nhau. Điều này khác với mạng stub, chỉ xử lý dữ liệu được gửi đến hoặc từ chính nó.
+- Transit network thường được sử dụng bởi các nhà cung cấp dịch vụ Internet (ISP) để kết nối mạng của khách hàng với mạng của các ISP khác.
+- Transit network cũng có thể được sử dụng trong các doanh nghiệp lớn để kết nối các văn phòng hoặc nhà máy ở các địa điểm khác nhau.
+Ví dụ về transit network có thể là mạng của một ISP, cho phép dữ liệu di chuyển từ mạng của khách hàng này sang mạng của khách hàng khác hoặc sang mạng của ISP khác.
+
+
+-> OSPF multi area 
+Mỗi connect giữa các router đều là 1 network LSA và 1 router LSA, trừ cục hình chữ nhật nối đôi một thì coi là 1 network LSA thôi.
+
+Khi có quá nhiều router thì chia ra thành nhiều vùng. Các vùng khác nhau không cần phải update bảng routing của bảng khác vì sẽ rất lâu. 
+Các vùng ở giữa là backbone, area 0. Các mạng nghiệp vụ muốn connect với nhau phải đi qua vùng backbone qua các edge router nối giữa các vùng. 2 mạng nghiệp vụ kbh nối trực tiếp với nhau
+
+Summany LSA, 1 loại LSA mới chứa prefix. VD prefix 172.16.1.0/24
+Khi nhận được Summary LSA, nó có thể tính toán đường đi ngắn nhất của mạng khác mà k cần biết hết topo mạng khác như OSPF bth.
+VD vùng tím nối vùng vàng. Vùng tím - R4 - R6 edge - Vùng vàng Rn - Prefix vùng vàng
+Vùng vàng update -> R4 đến prefix bị đổi. R4 update đường đến prefix bằng đường từ R4 -> R6 + R6 đến prefix (trước là metric, h là metric+)
+=> Tức R6 router edge update bảng routing như bth, nhưng R4 k cần chạy lại thuật toán Djisktra nữa mà bằng ct trên vì vùng tím k đổi. 
+
+VD:
+Rx ---- R1(edge) ----\
+   ---- R2(edge) ---- Network1
+R1 và R2 đến network 1 thay đổi, lan truyền tới Rx. 
+Rx tìm đường đi tốt nhất bằng min (Rx -> R1 -> Network1 mới, Rx -> R2 -> Network1 mới)
+
+Tức trước kia tất cả thuộc 1 vùng thì tự động cập nhật bảng routing.
+Bh phân vùng, nó vẫn update bảng routing khi có update, nhưng nó k tính toán lại toàn bộ đồ thị của các vùng khác nữa mà chỉ thông qua summary LSA thôi.
+
+Các router nối giữa các vùng gọi là ABR, các router nối giữa các vùng lớn dùng các giao thức khác nhau gọi là ASPR
+
+Các hệ thống dùng các giao thức khác nhau như RIP, OSPF, static routing connect với nhau vẫn ok.
+
+External LSA giống RIP: Lần ngược lại đường đã đi (k áp dụng với OSPF) để tìm prefix
+Trong bản tin external LSA, forwarding address là trường xác định gateway, nếu rỗng thì đi ngược lại đường đã đi. Nếu có giá trị sẽ dùng làm gateway để gửi tới. 
+VD: 1 router R2 vừa nối hệ thống OSPF, vừa nối với hệ thống bên ngoài. VD slide 68, k đi qua R2 nữa mà đi qua con switch (làm gateway). Tức external LSA mạng bên ngoài R2 gửi 200.1.1 tới R gì đó, Thì R1 và R3 luôn hiểu là nhận gói tin external LSA từ R2, nhưng khi gửi gói tin external LSA 200.1.1 ra ngoài cho R4 thì k cần gửi cho R2 nữa mà gửi cho switch luôn (switch làm gateway ở đây), để làm được điều đó thì gói tin External LSA có trường fowarding address là địa chỉ của switch chứ kp rỗng là đươc
+
+Có nhiều kiểu external LSA.
+
+Vùng cụt (stub area): khi đến vùng đó sẽ k thể đến các vùng khác nữa. Tương tự router cụt là gửi tới sẽ k thể gửi tới các router khác nữa. 
+Toàn bộ router trong 1 stub area có 1 tc đặc biệt là: đều phải cấu hình chung 1 default gateway là 1 rows duy nhất (ví dụ trong slide là R2) vì nó chỉ có 1 đường đi duy nhất ra ngoài.
+
+Cấu hình area cho ospf:
+Prefix là tiền tố trong các network
+Một area trong OSPF có thể chứa nhiều prefix tùy vào nó bao những mạng nào
+
+External LSA (Link State Advertisement) là một loại LSA trong giao thức OSPF (Open Shortest Path First) được sử dụng để quảng bá thông tin về các mạng nằm ngoài của OSPF domain (nằm ngoài các area của OSPF).
+External LSA được tạo ra bởi Autonomous System Boundary Router (ASBR) để thông báo về các mạng ngoại vi (external networks) mà OSPF không biết đến. Các external LSA này được quảng bá trong OSPF domain để cho phép OSPF tính toán đường đi tới các mạng ngoại vi đó thông qua ASBR.
+
+External LSA có hai loại chính: Type 5 External LSA được sử dụng trong OSPFv2 để quảng bá thông tin về các mạng ngoại vi, trong khi Type 7 External LSA được sử dụng trong OSPFv3 cho cùng mục đích.
+
+Summary LSA (Link State Advertisement) là một loại LSA trong giao thức OSPF (Open Shortest Path First) được sử dụng để quảng bá thông tin về các mạng nằm trong một area đến các area khác.
+Summary LSA được tạo ra bởi Area Border Router (ABR), một loại router đặc biệt trong OSPF có nhiệm vụ kết nối giữa các area. ABR thu thập thông tin về các mạng trong area của mình và tạo ra Summary LSA để quảng bá thông tin này đến các area khác.
+
+Có hai loại Summary LSA:
+
+- Type 3 Summary LSA: Quảng bá thông tin về các mạng IP (prefixes) trong một area đến các area khác.
+- Type 4 Summary LSA: Quảng bá thông tin về vị trí của các Autonomous System Boundary Router (ASBR) đến các area khác. ASBR là router quảng bá thông tin về các mạng nằm ngoài OSPF domain.
+=> Summary LSA giúp OSPF có thể tính toán đường đi tối ưu đến các mạng trong các area khác.
+
+--> Thực hành:
+Đẻ cấu hình thêm 1 router thuộc area nào, VD ta chỉ cần config "network 192.169.1.0/24 area 0" trong cấu hình ospf.
+Sau khi cấu hình area, sẽ k thấy router LSA và network LSA của các router ở các area khác.
+
+VD: Khi R2 -> R3 -> R4 -> network4 với R4 và R2 khác area (R4 thuộc area2), R3 là edge router ngoài area của R4
+=> Khi ngắt kết nối R4 với network4, nó quảng bá thông tin này tới mọi router khác trong area 2. Check router LSA của R4 sẽ thấy tăng seq lên 1 là cái LSA quảng bá network4. Trên mạng 3 thì k đổi gì cả vì ngoài area. Kết nối lại thì tiếp tục tăng 1 ở R4 và R3 k đổi
+=> Để quảng bá 1 summary LSA, ta phải thay đổi cost. Chứ ngắt và bật lại như trên k đổi summary LSA. VD đổi cost đường đi từ R4 đến mạng 4. Check lại R2 sẽ thấy seq tăng 1 ở cái summary LSA đi vào mạng 4.
+
+Khi bạn ngắt kết nối mạng, OSPF sẽ phát hiện sự thay đổi trong mạng và cập nhật bảng định tuyến của nó. Tuy nhiên, việc này không nhất thiết dẫn đến việc quảng bá lại summary LSA ra bên ngoài mạng. LSA (Link State Advertisement) chỉ được quảng bá ra bên ngoài mạng khi có sự thay đổi trong topology của mạng, chẳng hạn như thay đổi cost của một đường đi hoặc sự thay đổi trong cấu trúc mạng. Việc ngắt kết nối mạng có thể dẫn đến việc cập nhật bảng định tuyến nội bộ của OSPF, nhưng không nhất thiết sẽ gây ra sự thay đổi đủ lớn để quảng bá lại summary LSA ra bên ngoài mạng.
+
+
+
+# Other
+-> Phân mềm whiteshark giúp bắt các gói tin đi từ mạng nào đến mạng nào.
+
+-> Giao thức RIP (Routing Information Protocol) là một giao thức định tuyến dựa trên thuật toán Bellman-Ford. Nó cho phép các router tự động cập nhật bảng định tuyến của mình và chia sẻ thông tin với các router khác trong mạng. "Khoảng cách" trong RIP thường được đo bằng số lượng các bước (hops) từ nguồn đến đích, với mỗi router trung gian được coi là một bước.
+Tuy nhiên, lưu ý rằng RIP không phải là giao thức hiệu quả và thường không được sử dụng trong các mạng lớn hoặc mạng hiện đại. Các giao thức định tuyến như OSPF (Open Shortest Path First) hoặc BGP (Border Gateway Protocol) thường được ưa chuộng hơn trong các môi trường mạng phức tạp hơn.
+
+Giao thức RIP (Routing Information Protocol) được gọi là giao thức distance vector, nhưng nó không sử dụng giải thuật Dijkstra để tính toán đường đi. Thay vào đó, RIP sử dụng số lượng các bước nhảy (hop count) tối đa là 15 để xác định đường đi tối ưu.
+
+Giải thuật Dijkstra thực sự được sử dụng trong giao thức OSPF (Open Shortest Path First), một giao thức routing thuộc loại link-state, không phải distance vector.
+
+-> So với các router "không thông minh" (chỉ hỗ trợ định tuyến tĩnh - thủ công) chỉ có tầng Data Plane chứa bảng routing để phục vụ xử lý di chuyển các gói tin IP, các router "thông minh" hỗ trợ phương pháp định tuyến động (ví dụ RIP) cần có thêm tầng Control Plane để liên lạc với nhau và tự động tính toán đường đi tối ưu.
+Trong giao thức RIP, router xác định một RTE từ Control Plane và đưa vào Data Plane vào thời điểm nào?
+Trong giao thức RIP, router xác định một RTE (Routing Table Entry) từ Control Plane và đưa vào Data Plane khi các giá trị Metric được cập nhật trong Control Plane. Control Plane chịu trách nhiệm cho việc quyết định đường đi (routing decisions) và cập nhật bảng định tuyến (routing table). Khi có sự thay đổi trong mạng (như một đường link bị hỏng), Control Plane sẽ cập nhật các giá trị Metric tương ứng, và sau đó cập nhật bảng định tuyến trong Data Plane.
+
+-> Một hệ thống kết nối liên mạng có sơ đồ kết nối như sau (các router R1, R2, R3, Rx và các host H1, H2):
+                            /----- H1: 192.168.1.10/24
+      Rx -- ... -- R1 ---- R2 ---- R3 
+                                    \----- H2: 192.168.2.20/24
+Xem thông tin router Rx thấy có 2 RTE (bỏ qua thông tin 'next hop'):
+- RTE#1: (prefix #1: 192.168.1.0/24, metric: 4)
+- RTE#2: (prefix #2: 192.168.2.0/24, metric: 5)
+Những nhận định nào đúng sau đây, khi các router trao đổi RTE từ router láng giềng:
+B. R1 nhận từ R2: (prefix #1, metric: 0)
+D. R1 nhận từ R2: (prefix #2, metric: 1)
+E. Rx nhận (prefix #1, metric: 3)
+F. Rx nhận (prefix #2, metric: 4)
+
+-> Trong giao thức RIP, khi nhận được yêu cầu tìm kiếm router láng giềng, router RIP trả lời về sự có mặt của mình bằng gói tin ICMP Advertisement.
+ICMP Advertisement trong ngữ cảnh của giao thức RIP (Routing Information Protocol) thường được gọi là "RIP ICMP Response". Trong RIP, giao thức này sử dụng các gói tin ICMP để truyền thông tin định tuyến giữa các router. Khi một router RIP nhận được một bản cập nhật RIP từ một router khác, nó có thể gửi một gói tin ICMP Response để xác nhận lại rằng nó đã nhận được thông tin đó. Gói tin này có thể được sử dụng để đảm bảo rằng thông tin định tuyến được chuyển tiếp một cách đáng tin cậy giữa các router trong mạng.
+
+Gói tin ICMP Advertisement không phải là một loại gói tin cụ thể trong giao thức ICMP (Internet Control Message Protocol) mà chỉ được dùng trong RIP. ICMP (Internet Control Message Protocol) là một trong các giao thức cơ bản của mạng Internet, được sử dụng để truyền thông thông tin về trạng thái và lỗi trong quá trình truyền tin. ICMP không chứa các gói tin "Advertisement" trong định nghĩa chuẩn của nó.
+
+-> RIP (Routing Information Protocol) là một giao thức định tuyến. Trong RIP, có hai loại gói tin quan trọng là RIP Hello và RIP Reply
+RIP Hello (Request):
+Chức năng: RIP Hello được sử dụng để kiểm tra tính sống còn của các neighbor (hàng xóm) RIP trong mạng. Nó giúp đảm bảo rằng các router đang hoạt động và có thể giao tiếp với nhau.
+Địa chỉ đích: Địa chỉ Broadcast (255.255.255.255) hoặc địa chỉ multicast RIP (224.0.0.9).
+Quá trình hoạt động: Router gửi gói tin RIP Hello định kỳ (thường là mỗi 30 giây). Nếu một router RIP nhận được gói tin này từ một router khác, nó sẽ gửi lại một RIP Reply để xác nhận tính sống còn của nó.
+RIP Reply:
+Chức năng: RIP Reply được sử dụng để truyền thông tin định tuyến giữa các router trong mạng RIP. Nó chứa danh sách các mạng mà router gửi đến và số lượng "metric" (khoảng cách) từ router gửi đến mạng đó.
+Địa chỉ đích: Địa chỉ IP của router gửi yêu cầu (thường là địa chỉ IP của neighbor RIP gửi RIP Hello).
+Quá trình hoạt động: Khi một router RIP nhận được yêu cầu RIP Hello từ một neighbor, nó sẽ kiểm tra danh sách các mạng mà nó biết và gửi lại thông tin này dưới dạng RIP Reply.
+
+-> Routing protocol được các router sử dụng để xây dựng dữ liệu trong Control Plane. Đây là một phần quan trọng của việc quyết định các tuyến đường tốt nhất để chuyển tiếp dữ liệu từ nguồn đến đích. Các giao thức định tuyến như RIP, OSPF, BGP là các ví dụ về routing protocol.
+Routed protocol là giao thức chuyển tiếp gói tin IP dựa trên bảng routing nằm ở Data Plane. Các giao thức chuyển tiếp gói tin như IP, IPv6, IPX là các ví dụ về routed protocol.
+
+-> Sử dụng môi trường giả lập mạng, bắt gói tin ICMP giữa các router trong quá trình phát hiện router láng giềng mà sử dụng giao thức RIPv2:
+ICMP được gửi unicast giữa các router khi trả lời trực tiếp đến một router
+ICMP được gửi đến địa chỉ 224.0.0.9 khi router muốn tìm kiếm router láng giềng và đó cũng là địa chỉ multicast
+=> Tức là lúc ICMP gửi để phát hiện router láng giềng, nó gửi unicast (khi trả lời tới 1 router) và multicast khi tìm kiếm router
+=> Còn khi đã có bảng routing rồi, mỗi 30s muốn check sẽ gửi broadcast với RIPv1, RipV2 cải tiến dùng multicast với địa chỉ 224.0.0.9 nhưng vẫn có thể cấu hình broadcast hoặc unicast (nếu cần gửi bảng routing của nó tới 1 router cụ thể nào đó hoặc khi hệ thống mạng k hỗ trợ 2 kiểu cast kia)
+
+-> Khao báo network trong cấu hình RIP cho một router dùng để làm gì? 
+- kích hoạt (enable) kết nối mạng này của router để quảng bá các router khác bằng giao thức RIP
+- tìm kiếm router láng giềng trên local link ứng với kết nối mạng network
+Mục tiêu của nó là khiến cho router hiện tại enable việc kết nối với network đó và quảng bá nó tới các router láng giềng của nó. Nó cũng xác định các router láng giềng nào đang kết nối sẵn với mạng đó rồi để gửi thông tin thêm.
+
+-> ICMP Router Solicitation được sử dụng trong IPv6 để các thiết bị mới tham gia mạng hỏi các router có sẵn trong mạng về thông tin định tuyến.
+RIP Hello là request khi xác nhận router còn sống mỗi 30s
+RIP Reply là trả lời của RIP Hello
+ICMP Advertisement là trả lời cho ICMP Solicitation là để response
+
+-> Trong giao thức RIP (Routing Information Protocol), RTE (Route Table Entry) đề cập đến các thông tin cần thiết được lưu trữ trong bảng định tuyến (routing table) của một thiết bị mạng để quyết định cách đi tới các đích mục tiêu khác nhau. Mỗi RTE bao gồm các trường dữ liệu như địa chỉ mạng (network address), mask (subnet mask), next hop (địa chỉ IP của thiết bị tiếp theo trong đường đi), và metric (số lượng bước nhảy đến đích). Khi có sự thay đổi trong mạng hoặc thông tin định tuyến, RTE sẽ được cập nhật để đảm bảo việc định tuyến hiệu quả. 
+Khi một router nhận được thông điệp RIP chứa thông tin về mạng, nó cập nhật hoặc thêm RTE tương ứng trong bảng định tuyến của mình. Mỗi gói tin RIP có thể chứa nhiều RTE.
+
+-> Trong 1 bản tin RIP có:
+04:58:20.104263 IP (tos 0xc0, ttl 1, id 10931, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.12.520 > 224.0.0.9.520:
+        RIPv2, Request, length: 24, routes: 1 or less
+          AFI 0,         0.0.0.0/0 , tag 0x0000, metric: 16, next-hop: self
+Trong đó:
+- 04:58:20.104263: Đây là timestamp, thời gian mà bản tin được ghi lại.
+- IP: Giao thức mà bản tin sử dụng.
+- tos 0xc0: Type of Service, đây là một trường trong header của gói tin IP, được sử dụng để chỉ định ưu tiên của gói tin. 0xc0 là giá trị hexa của trường này.
+- ttl 1: Time to Live, số lượng các bước nhảy tối đa mà gói tin có thể đi qua trước khi bị loại bỏ. Trong trường hợp này, ttl là 1.
+- id 10931: Định danh duy nhất của gói tin, được sử dụng để phục hồi các phần của gói tin sau khi chúng được phân mảnh.
+- offset 0: Đây là vị trí của phần mảnh trong gói tin gốc.
+- flags [DF]: Cờ trong header của gói tin IP. DF là viết tắt của "Don't Fragment", có nghĩa là gói tin này không được phân mảnh.
+- proto UDP (17): Giao thức được sử dụng ở tầng transport. Trong trường hợp này, đó là UDP (User Datagram Protocol), và 17 là số hiệu của nó trong IANA Protocol Numbers.
+- length 52: Độ dài tổng cộng của gói tin, bao gồm header và dữ liệu, đơn vị là byte.
+- 192.168.56.12.520 > 224.0.0.9.520: Địa chỉ nguồn và đích của gói tin, cùng với cổng UDP tương ứng. 192.168.56.12 là địa chỉ IP nguồn, 520 là cổng nguồn. 224.0.0.9 là địa chỉ IP đích, cũng là cổng đích.
+- RIPv2, Request, length: 24, routes: 1 or less: Đây là một gói tin RIP phiên bản 2, loại Request, với độ dài là 24 byte, và chứa thông tin về tối đa 1 tuyến đường.
+- AFI 0, 0.0.0.0/0 , tag 0x0000, metric: 16, next-hop: self: Đây là thông tin về tuyến đường. AFI (Address Family Identifier) là 0, có nghĩa là không có địa chỉ mạng cụ thể. Địa chỉ mạng là 0.0.0.0/0, có nghĩa là tất cả các mạng. Tag là 0x0000, metric là 16 (không thể đạt được), và next-hop là chính router gửi gói tin này.
+
+-> Route poisoning là một cơ chế trong giao thức định tuyến như RIP (Routing Information Protocol) được sử dụng để ngăn chặn vòng lặp định tuyến.
+Khi một router phát hiện ra rằng một đường dẫn đến một mạng cụ thể không còn khả dụng, nó sẽ cập nhật metric của mạng đó trong bảng định tuyến của mình thành 16, giá trị này biểu thị rằng mạng đó không thể đạt được. Router sau đó sẽ lan truyền thông tin này đến tất cả các router láng giềng của mình.
+Cơ chế này giúp ngăn chặn vòng lặp định tuyến bằng cách ngăn chặn việc thông tin về một đường dẫn không khả dụng được lan truyền trở lại nguồn gốc của nó thông qua một vòng lặp định tuyến.
+
+Gói tin có metric = 16 cũng chính là gói tin lan tỏa router poisoning
+
+Trong giao thức RIP, 0.0.0.0/0 thường được sử dụng để biểu thị một tuyến mặc định, và metric 16 thường được sử dụng để biểu thị một tuyến không thể đạt được. Tuy nhiên, trong trường hợp của gói tin RIP Request, 0.0.0.0/0 với metric 16 không biểu thị route poisoning. Thay vào đó, nó được sử dụng để yêu cầu các router láng giềng gửi lại toàn bộ bảng định tuyến của chúng. Nó phải là type request. router poisoning là type response
+
+-> Trên một đường truyền vật lý kết nối các router có các traffic RIP sau:
+
+04:58:20.104263 IP (tos 0xc0, ttl 1, id 10931, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.12.520 > 224.0.0.9.520:
+        RIPv2, Request, length: 24, routes: 1 or less
+          AFI 0,         0.0.0.0/0 , tag 0x0000, metric: 16, next-hop: self
+04:58:20.105281 IP (tos 0xc0, ttl 64, id 20578, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.13.520 > 192.168.56.12.520:
+        RIPv2, Response, length: 24, routes: 1 or less
+          AFI IPv4,     192.168.3.0/24, tag 0x0000, metric: 1, next-hop: self
+04:58:20.105614 IP (tos 0xc0, ttl 64, id 31641, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.11.520 > 192.168.56.12.520:
+        RIPv2, Response, length: 24, routes: 1 or less
+          AFI IPv4,     192.168.1.0/24, tag 0x0000, metric: 1, next-hop: self
+04:58:31.046380 IP (tos 0xc0, ttl 1, id 61354, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.13.520 > 224.0.0.9.520:
+        RIPv2, Response, length: 24, routes: 1 or less
+          AFI IPv4,     192.168.3.0/24, tag 0x0000, metric: 1, next-hop: self
+04:58:35.679746 IP (tos 0xc0, ttl 1, id 42388, offset 0, flags [DF], proto UDP (17), length 52)
+    192.168.56.11.520 > 224.0.0.9.520:
+        RIPv2, Response, length: 24, routes: 1 or less
+          AFI IPv4,     192.168.1.0/24, tag 0x0000, metric: 1, next-hop: self
+
+1. Router RIP yêu cầu nhận thông tin RIP bằng cách gửi RIP request đến địa chỉ IP nào?
+Router RIP yêu cầu nhận thông tin RIP bằng cách gửi RIP request đến địa chỉ IP 224.0.0.9. Đây là địa chỉ multicast dành cho tất cả các router RIP trong mạng cục bộ.
+
+2. Các router RIP trả lời bằng bản tin RIP response gửi trực tiếp (unicast) đến địa chỉ IP của router đã gửi request. IP đó là bao nhiêu?
+Các router RIP trả lời bằng bản tin RIP response gửi trực tiếp (unicast) đến địa chỉ IP của router đã gửi request. IP đó là 192.168.56.12.
+
+3. Ngoài việc gửi unicast trực tiếp đến router RIP đã gửi request, các router RIP còn gửi trả lời đến tất cả các router RIP khác trên kết nối vật lý này bằng một IP đặc biệt. IP đó là bao nhiêu?
+Ngoài việc gửi unicast trực tiếp đến router RIP đã gửi request, các router RIP còn gửi trả lời đến tất cả các router RIP khác trên kết nối vật lý này bằng một IP đặc biệt. IP đó là 224.0.0.9. Đây là địa chỉ multicast dành cho tất cả các router RIP trong mạng cục bộ.
+
+-> Để ping được 8.8.8.8: set nat network, sửa netplan file cái dhcp4 thành true rồi apply phát là ping được
+
+-> Hiểu OSPF:
+LS database số lượng bản ghi kbh vượt quá số lượng router. 
+1 LSA chứa tất cả thông tin về các router láng giềng của 1 router khi router đó chuyển thông tin LSA của nó đi
+Lúc cập nhật vào bảng routing sẽ chỉ còn 1 đường tối ưu
+Số kết nối là số trường trong LS chứ kp mỗi kết nối là 1 LS
+
+Network LSA để xử lý topo mạng. Chọn ra 1 Designated router (thông qua hello protocol) và DR sẽ gửi kèm network lsa mà nó quản lý là 1 transit network topo mạng. Gắn với mạng nào thì gửi. Coi nó như 1 node trong cây 
+32 bit lấy số lớn nhất làm id (trong video)??
+
+BT:
+R1-4 nối thành vòng tròn
+Nếu R4 gặp sự cố nên đường kết nối chiều từ R4 đến R3, R1 đồng thời bị giảm tốc độ còn 50% (chiều ngược lại từ R1,R3 đến R4 không bị ảnh hưởng). Các LSA nào được lan truyền trong hệ thống?
+Trong trường hợp này, khi đường kết nối từ R4 đến R3 và từ R4 đến R1 đều bị giảm tốc độ, router R4 sẽ cần cập nhật thông tin về cả hai đường kết nối này trong router-LSA của nó. Do đó, một router-LSA mới sẽ được tạo ra và lan truyền trong hệ thống. Vì chiều ngược lại từ R1 và R3 đến R4 không bị ảnh hưởng, nên R1 và R3 không cần phải tạo ra router-LSA mới. 
+=> 1 router-LSA được lan truyền trong hệ thống
+
+Lưu ý rằng, trong OSPF, network-LSAs chỉ được tạo ra bởi các router được chỉ định (Designated Router - DR) trên các mạng transit, không phải trên các mạng stub. Trong trường hợp này, không có thông tin nào cho thấy có sự thay đổi về mạng transit, do đó không có network-LSA nào được tạo ra.
+
+-> BT Multi area, summary LSA:
+Một hệ thống kết nối liên mạng có sơ đồ kết nối như sau:
+                Area 0     |      Area 2
+                           |
+        R ----- R1 ----- [ABR] ----- R2 ----> (.) prefix N
+                           |
+- Hệ thống OSPF multi area
+- router R thuộc Area #0 kết nối prefix N thuộc Area #2 qua các router trung gian và ABR
+- ABR kết nối liên vùng 0-2
+Cho biết trong data plane của router R đang lưu trữ cost ngắn nhất đến prefix N là 125. Area #2 xuất hiện thay đổi trạng thái mạng, router-LSA được lan truyền trong Area #2 và kích hoạt summary-LSA tại ABR để lan truyền đến router R với thông số (prefix_N, cost_N = 35). Biết rằng cost hiện tại trong data plane từ R đến ABR là 100. R sẽ cập nhật cost mới đến prefix N với giá trị bao nhiêu?
+=> 135
+
+- Hệ thống gồm 2 area 0 và 1, kết nối với nhau thông qua ABR là R2 
+- Trong area 0 có 1 router nội vùng là R1
+- Trong area 1 có 1 router nội vùng là R3 kết nối 3 network 1, network 2, network 3 
+- Trong area 1 có 1 router R2 kết nối với 2 mạng network 1 và network 2
+- Từng router khai báo kích hoạt OSPF trên tất cả các kết nối mạng của nó
+Khi trạng thái của network 2 tốt dần lên, truyền tải nhanh hơn thì số lượng summary LSA được ABR quảng bá vào area 0 là 2, tại sao. Khi trạng thái của network 2 tệ dần đi và truyền tải chậm hơn thì số lượng chỉ là 1, vì sao?
+=> Ảo vl, dù tăng hay giảm thì chỉ 1 summary thôi chứ
+
+
